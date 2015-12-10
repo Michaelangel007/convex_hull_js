@@ -1,0 +1,17 @@
+/* 
+    // http://www.w3schools.com/tags/tryit.asp?filename=tryhtml5_canvas_lineto
+    context.beginPath();
+    context.moveTo(0,0);
+    context.lineTo(300,150);
+    context.strokeStyle = '#ff0000';
+    context.stroke();
+    //http://stackoverflow.com/questions/7812514/drawing-a-dot-on-html5-canvas
+            context.fillRect(nx,ny,1,1);
+            context.lineTo(nx,ny);
+    //http://stackoverflow.com/questions/8539713/setting-opacity-of-html-elements-in-different-browsers
+    <div id="before" style='opacity:0.0'></div>
+    <div id="after"  style='opacity:0.0'></div>
+    <img src="before.png" id="before" style='opacity:1.0; position:absolute; left="0px"; top="0px"'>
+    <img src="after.png"  id="after"  style='opacity:1.0; position:absolute; left="0px"; top="0px"'>
+*/
+
