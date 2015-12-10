@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+"use strict";
+
+    var canvas, context, cw, ch;
+    var points = 
+    [
+        201, 129,
+        380, 133,
+        538, 106,
+        966, 194,
+        479, 193,
+        790, 125,
+        101, 338,
+        247, 265,
+        532, 255,
+        654, 272,
+        808, 234,
+        321, 323,
+        463, 329,
+        142, 509,
+        318, 439,
+        516, 411,
+        663, 379,
+        864, 371,
+        905, 410,
+        722, 565
+    ];
+    var colors = [
+        "#800", "#F00", "#F80", "#FF0",
+        "#8F0", "#0F0", "#0F8", "#0FF",
+        "#08F", "#00F", "#80F", "#F0F",
+    ];
+    var state       = 0;
+    var STATE_POINT = 1;
+    var STATE_LINES = 2;
+    var STATE_BOX   = 3;
+    var STATE_HULL_1= 4;
+    var STATE_HULL_2= 5;
+    var step        = 0;
+
+    var minXYmaxXY  = [];
+    var convexIndex = [];
+    var convexVerts = [];
+
+    var culledIndex = [];
+    var culledPoints= [];
+
+function canvas_clear()
+{
+    context.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function draw_points()
+{
+    var i, nx, ny, n = points.length/2, px = points[0], py = points[1];
+
+    for( i = 0; i < n; ++i )
+    {
+        nx = points[ i*2 + 0 ];
+        ny = points[ i*2 + 1 ];
+
+if(0) // 1x1 pixel
+        {
+            context.beginPath();
+                context.moveTo( px    ,py     );
+                context.lineTo( px+0.5,py+0.5 );
+            context.strokeStyle = '#F00';
+            context.stroke();
+        }
+else // 3x3 pixels
+        {
+            context.fillStyle="#F00";
+            context.fillRect( nx-1, ny-1, 3, 3 );
+        }
+        px = nx;
+        py = ny;
+    }
+}
+
+/* 
+    // http://www.w3schools.com/tags/tryit.asp?filename=tryhtml5_canvas_lineto
+    context.beginPath();
+    context.moveTo(0,0);
+    context.lineTo(300,150);
+    context.strokeStyle = '#ff0000';
+    context.stroke();
+    //http://stackoverflow.com/questions/7812514/drawing-a-dot-on-html5-canvas
+            context.fillRect(nx,ny,1,1);
+            context.lineTo(nx,ny);
+    //http://stackoverflow.com/questions/8539713/setting-opacity-of-html-elements-in-different-browsers
+    <div id="before" style='opacity:0.0'></div>
+    <div id="after"  style='opacity:0.0'></div>
+    <img src="before.png" id="before" style='opacity:1.0; position:absolute; left="0px"; top="0px"'>
+    <img src="after.png"  id="after"  style='opacity:1.0; position:absolute; left="0px"; top="0px"'>
+*/
+
+function draw_tris( maxpoints, forcecolor )
+{
+    var color,c = colors.length;
+    var i, j, n = points.length/2;
+    var px, py, nx, ny, len;
+
+    if( maxpoints === undefined )
+        len = n-1;
+    else
+        len = maxpoints;
+
+    for( i = 0; i < len; ++i )
+    {
+        if( forcecolor !== undefined )
+            color = forcecolor
+        else
+        if( maxpoints !== undefined )
+            color = (i == maxpoints-1)
+                  ? colors[ i % c ]
+                  : "#000";
+        else
+            color = colors[ i % c ];
+
+        px = points[ i*2 + 0 ];
+        py = points[ i*2 + 1 ];
+    
+        for( j = i+1; j < n; ++j )
+        {
+            nx = points[ j*2 + 0 ];
+            ny = points[ j*2 + 1 ];
+
+            context.beginPath();
+                context.moveTo( px, py );
+                context.lineTo( nx, ny );
+            context.strokeStyle = color;
+            context.stroke();
+        }
+    }
+}
+
+function find_minmax()
+{
+    var i, n = points.length/2;
+    var minX = points[ 0 ], iMinX = 0;
+    var maxX = points[ 0 ], iMaxX = 0;
+    var minY = points[ 1 ], iMinY = 0;
+    var maxY = points[ 1 ], iMaxY = 0;
+    var px, py;
+
+    for( i = 1; i < n; ++i )
+    {
+        px = points[ i*2 + 0 ];
+        py = points[ i*2 + 1 ];
+
+        if( minX > px ) { minX = px; iMinX = i; console.log( "Potential MinX %d convex point: [%d]", px, i ); }
+        if( maxX < px ) { maxX = px; iMaxX = i; console.log( "Potential MaxX %d convex point: [%d]", px, i ); }
+        if( minY > py ) { minY = py; iMinY = i; console.log( "Potential MinY %d convex point: [%d]", py, i ); }
+        if( maxY < py ) { maxY = py; iMaxY = i; console.log( "Potential MaxY %d convex point: [%d]", py, i ); }
+    }
+
+    minXYmaxXY = [ minX, minY, maxX, maxY ];
+
+    convexIndex.push( iMinX );
+    convexIndex.push( iMaxX );
+    convexIndex.push( iMinY );
+    convexIndex.push( iMaxY );
+
+    //convexVerts.push( points[ iMinX ] );
+    //convexVerts.push( points[ iMaxX ] );
+    //convexVerts.push( points[ iMinY ] );
+    //convexVerts.push( points[ iMaxY ] );
+    console.log( "Partial Convex Hull Indices: " + convexIndex );
+    for( i = 0; i < convexIndex.length; ++i )
+    {
+        console.log( "#%d: [%d] %d,%d",
+            i, convexIndex[i],
+            points[ convexIndex[i]*2+0 ],
+            points[ convexIndex[i]*2+1 ]
+        );
+    }
+}
+
+function draw_convex()
+{
+    var color,c = colors.length;
+    var i, j, n = points.length/2;
+    var px, py, nx, ny, len = convexIndex.length;
+
+    i = 0;
+    px = points[ convexIndex[ i ]*2 + 0 ];
+    py = points[ convexIndex[ i ]*2 + 1 ];
+
+    for( i = 1; i < len; ++i )
+    {
+        color = "#F00";
+
+        nx = points[ convexIndex[ i ]*2 + 0 ];
+        ny = points[ convexIndex[ i ]*2 + 1 ];
+
+if(0) // corner points
+        {
+            context.fillStyle="#F00";
+            context.fillRect( nx-1, ny-1, 3, 3 );
+        }
+        else
+        {
+            context.beginPath();
+                context.moveTo( px, py );
+                context.lineTo( nx, ny );
+            context.strokeStyle = color;
+            context.stroke();
+            px = nx;
+            py = ny;
+        }
+    }
+
+    // Join last to first
+        i = 0;
+        nx = points[ convexIndex[ i ]*2 + 0 ];
+        ny = points[ convexIndex[ i ]*2 + 1 ];
+
+        context.beginPath();
+            context.moveTo( px, py );
+            context.lineTo( nx, ny );
+        context.strokeStyle = color;
+        context.stroke();
+}
+
+function draw_minmax()
+{
+    // draw minX - vert
+        context.beginPath();
+            context.moveTo( minXYmaxXY[0],  0 );
+            context.lineTo( minXYmaxXY[0], ch );
+        context.strokeStyle = "#484";
+        context.stroke();
+    // draw minY - horz
+        context.beginPath();
+            context.moveTo(  0, minXYmaxXY[1] );
+            context.lineTo( cw, minXYmaxXY[1] );
+        context.strokeStyle = "#844";
+        context.stroke();
+    // draw maxX - vert
+        context.beginPath();
+            context.moveTo( minXYmaxXY[2],  0 );
+            context.lineTo( minXYmaxXY[2], ch );
+        context.strokeStyle = "#484";
+        context.stroke();
+    // draw maxY - horz
+        context.beginPath();
+            context.moveTo(  0, minXYmaxXY[3] );
+            context.lineTo( cw, minXYmaxXY[3] );
+        context.strokeStyle = "#844";
+        context.stroke();
+}
+
+function find_convex()
+{
+}
+
+function init_convex()
+{
+    state  = 0;
+    step   = 0;
+
+    convexIndex = [];
+    convexVerts = [];
+
+    ui_text_set_label();
+}
+
+function OnClickNext()
+{
+    ++state;
+
+    switch( state )
+    {
+        case STATE_POINT:
+            draw_points();
+            ui_button_step_alpha( "1.0" );
+            break;
+        case STATE_LINES:
+            ui_button_step_alpha( "0.0" );
+            canvas_clear();
+            draw_tris  ();
+            draw_points();
+            break;
+        case STATE_BOX  :
+            draw_tris  ();
+            draw_points();
+            find_minmax();
+            draw_minmax();
+            break;
+        case STATE_HULL_1:
+            canvas_clear();
+            ui_button_step_alpha( "1.0" );
+            draw_tris  ( points.length/2, "#888" );
+            draw_convex();
+            draw_minmax();
+            break;
+        case STATE_HULL_2:
+            canvas_clear();
+            ui_button_step_alpha( "0.0" );
+            draw_convex();
+            draw_minmax();
+            break;
+        default:
+            canvas_clear();
+            ui_button_step_alpha( "0.0" );
+            init_convex();
+            break;
+    }
+}
+
+function OnClickStep()
+{
+    if( state === STATE_POINT )
+    {
+        ++step;
+        var n = points.length/2;
+console.log( "Step: %d/%d", step, n-1 );
+        if( step > (n-1) )
+        {
+            step = (n-1) ;
+            OnClickNext();
+        }
+        else
+        {
+            ui_text_set_label();
+
+            draw_tris  ( step );
+            draw_points();
+        }
+    }
+    if( state === STATE_HULL_1 )
+    {
+        ++step;
+        var n = points.length/2;
+console.log( "Hull: %d/%d", step, n-1 );
+        if( step > (n-1) )
+        {
+            step = 0;
+            OnClickNext();
+        }
+        else
+        {
+            ui_text_set_label();
+        }
+    } 
+}
+
+function ui_button_step_alpha( alpha )
+{
+    var bs           = document.getElementById("buttonStep" );
+    bs.style.opacity = alpha;
+
+    var p           = document.getElementById("pointsText" );
+    p.style.opacity = alpha
+}
+
+function ui_text_set_label()
+{
+    var p       = document.getElementById("pointsText" );
+    p.innerHTML = "# Points: " + step + " / " + (points.length/2 - 1)
+}
+
+function main()
+{
+    canvas  = document.getElementById("canvas");
+    context = canvas.getContext("2d");
+    cw      = canvas.width ;
+    ch      = canvas.height;
+
+    ui_button_step_alpha( "0.0" );
+
+    init_convex();
+
+//    init_convex();
+//    draw_tris  ();
+//    draw_points();
+//    find_minmax();
+//    draw_minmax();
+//    find_convex();
+//    draw_convex();
+}
+        </script>
+    </head>
+<body onload="main()">
+    <button id="buttonNext" onclick="OnClickNext()">Next</button>
+    <button id="buttonStep" onclick="OnClickStep()">Step</button>
+    <span id="pointsText"></span>
+    <p>
+    <canvas id="canvas" width="1152" height="648" style="border:1px solid #CCC;">
+    <p>
+</body>
+</html>
