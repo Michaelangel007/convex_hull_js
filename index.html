@@ -8,7 +8,7 @@ https://github.com/Michaelangel007/convex_hull_js
 "use strict";
 
     var canvas, context, cw, ch;
-    var points = 
+    var raw_points = 
     [
         201, 129,
         380, 133,
@@ -31,6 +31,7 @@ https://github.com/Michaelangel007/convex_hull_js
         905, 410,
         722, 565
     ];
+    var points = [];
     var colors = [
         "#800", "#F00", "#F80", "#FF0",
         "#8F0", "#0F0", "#0F8", "#0FF",
@@ -58,12 +59,12 @@ function canvas_clear()
 
 function draw_points()
 {
-    var i, nx, ny, n = points.length/2, px = points[0], py = points[1];
+    var i, nx, ny, n = points.length, px = points[0].x, py = points[1].y;
 
     for( i = 0; i < n; ++i )
     {
-        nx = points[ i*2 + 0 ];
-        ny = points[ i*2 + 1 ];
+        nx = points[ i ].x;
+        ny = points[ i ].y;
 
 if(0) // 1x1 pixel
         {
@@ -86,7 +87,7 @@ else // 3x3 pixels
 function draw_tris( maxpoints, forcecolor )
 {
     var color,c = colors.length;
-    var i, j, n = points.length/2;
+    var i, j, n = points.length;
     var px, py, nx, ny, len;
 
     if( maxpoints === undefined )
@@ -106,13 +107,13 @@ function draw_tris( maxpoints, forcecolor )
         else
             color = colors[ i % c ];
 
-        px = points[ i*2 + 0 ];
-        py = points[ i*2 + 1 ];
+        px = points[ i ].x;
+        py = points[ i ].y;
 
         for( j = i+1; j < n; ++j )
         {
-            nx = points[ j*2 + 0 ];
-            ny = points[ j*2 + 1 ];
+            nx = points[ j ].x;
+            ny = points[ j ].y;
 
             context.beginPath();
                 context.moveTo( px, py );
@@ -125,17 +126,17 @@ function draw_tris( maxpoints, forcecolor )
 
 function find_minmax()
 {
-    var i, n = points.length/2;
-    var minX = points[ 0 ], iMinX = 0;
-    var maxX = points[ 0 ], iMaxX = 0;
-    var minY = points[ 1 ], iMinY = 0;
-    var maxY = points[ 1 ], iMaxY = 0;
+    var i, n = points.length;
+    var minX = points[ 0 ].x, iMinX = 0;
+    var maxX = points[ 0 ].x, iMaxX = 0;
+    var minY = points[ 0 ].y, iMinY = 0;
+    var maxY = points[ 0 ].y, iMaxY = 0;
     var px, py;
 
     for( i = 1; i < n; ++i )
     {
-        px = points[ i*2 + 0 ];
-        py = points[ i*2 + 1 ];
+        px = points[ i ].x;
+        py = points[ i ].y;
 
         if( minX > px ) { minX = px; iMinX = i; console.log( "Potential MinX %d convex point: [%d]", px, i ); }
         if( maxX < px ) { maxX = px; iMaxX = i; console.log( "Potential MaxX %d convex point: [%d]", px, i ); }
@@ -159,8 +160,8 @@ function find_minmax()
     {
         console.log( "#%d: [%d] %d,%d",
             i, convexIndex[i],
-            points[ convexIndex[i]*2+0 ],
-            points[ convexIndex[i]*2+1 ]
+            points[ convexIndex[i] ].x,
+            points[ convexIndex[i] ].y
         );
     }
 }
@@ -168,19 +169,19 @@ function find_minmax()
 function draw_convex()
 {
     var color,c = colors.length;
-    var i, j, n = points.length/2;
+    var i, j, n = points.length;
     var px, py, nx, ny, len = convexIndex.length;
 
     i = 0;
-    px = points[ convexIndex[ i ]*2 + 0 ];
-    py = points[ convexIndex[ i ]*2 + 1 ];
+    px = points[ convexIndex[ i ] ].x;
+    py = points[ convexIndex[ i ] ].y;
 
     for( i = 1; i < len; ++i )
     {
         color = "#F00";
 
-        nx = points[ convexIndex[ i ]*2 + 0 ];
-        ny = points[ convexIndex[ i ]*2 + 1 ];
+        nx = points[ convexIndex[ i ] ].x;
+        ny = points[ convexIndex[ i ] ].y;
 
 if(0) // corner points
         {
@@ -201,8 +202,8 @@ if(0) // corner points
 
     // Join last to first
         i = 0;
-        nx = points[ convexIndex[ i ]*2 + 0 ];
-        ny = points[ convexIndex[ i ]*2 + 1 ];
+        nx = points[ convexIndex[ i ] ].x;
+        ny = points[ convexIndex[ i ] ].y;
 
         context.beginPath();
             context.moveTo( px, py );
@@ -246,8 +247,6 @@ function find_convex()
 {
     // TODO: point-in-triangle (slow)
     // Fast point in polygon: https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-
-    
 }
 
 function init_convex()
@@ -286,7 +285,7 @@ function OnClickNext()
         case STATE_HULL_1:
             canvas_clear();
             ui_button_step_alpha( "1.0" );
-            draw_tris  ( points.length/2, "#888" );
+            draw_tris  ( points.length, "#888" );
             draw_convex();
             draw_minmax();
             break;
@@ -309,7 +308,7 @@ function OnClickStep()
     if( state === STATE_POINT )
     {
         ++step;
-        var n = points.length/2;
+        var n = points.length;
 console.log( "Step: %d/%d", step, n-1 );
         if( step > (n-1) )
         {
@@ -327,7 +326,7 @@ console.log( "Step: %d/%d", step, n-1 );
     if( state === STATE_HULL_1 )
     {
         ++step;
-        var n = points.length/2;
+        var n = points.length;
 console.log( "Hull: %d/%d", step, n-1 );
         if( step > (n-1) )
         {
@@ -396,7 +395,7 @@ function ui_button_step_alpha( alpha )
 function ui_text_set_label()
 {
     var p       = document.getElementById("pointsText" );
-    p.innerHTML = "# Points: " + step + " / " + (points.length/2 - 1)
+    p.innerHTML = "# Points: " + step + " / " + (points.length - 1)
 }
 
 function main()
@@ -407,6 +406,13 @@ function main()
     ch      = canvas.height;
 
     ui_button_step_alpha( "0.0" );
+
+    var n = raw_points.length;
+    for( var i = 0; i < n; i += 2 )
+    {
+        var p = { x: raw_points[i+0], y: raw_points[i+1] };
+        points[ i/2 ] = p;
+    }
 
     init_convex();
 
