@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+<!--
+https://github.com/Michaelangel007/convex_hull_js
+-->
 <html>
     <head>
         <script>
@@ -80,23 +83,6 @@ else // 3x3 pixels
     }
 }
 
-/* 
-    // http://www.w3schools.com/tags/tryit.asp?filename=tryhtml5_canvas_lineto
-    context.beginPath();
-    context.moveTo(0,0);
-    context.lineTo(300,150);
-    context.strokeStyle = '#ff0000';
-    context.stroke();
-    //http://stackoverflow.com/questions/7812514/drawing-a-dot-on-html5-canvas
-            context.fillRect(nx,ny,1,1);
-            context.lineTo(nx,ny);
-    //http://stackoverflow.com/questions/8539713/setting-opacity-of-html-elements-in-different-browsers
-    <div id="before" style='opacity:0.0'></div>
-    <div id="after"  style='opacity:0.0'></div>
-    <img src="before.png" id="before" style='opacity:1.0; position:absolute; left="0px"; top="0px"'>
-    <img src="after.png"  id="after"  style='opacity:1.0; position:absolute; left="0px"; top="0px"'>
-*/
-
 function draw_tris( maxpoints, forcecolor )
 {
     var color,c = colors.length;
@@ -122,7 +108,7 @@ function draw_tris( maxpoints, forcecolor )
 
         px = points[ i*2 + 0 ];
         py = points[ i*2 + 1 ];
-    
+
         for( j = i+1; j < n; ++j )
         {
             nx = points[ j*2 + 0 ];
@@ -233,18 +219,21 @@ function draw_minmax()
             context.lineTo( minXYmaxXY[0], ch );
         context.strokeStyle = "#484";
         context.stroke();
+
     // draw minY - horz
         context.beginPath();
             context.moveTo(  0, minXYmaxXY[1] );
             context.lineTo( cw, minXYmaxXY[1] );
         context.strokeStyle = "#844";
         context.stroke();
+
     // draw maxX - vert
         context.beginPath();
             context.moveTo( minXYmaxXY[2],  0 );
             context.lineTo( minXYmaxXY[2], ch );
         context.strokeStyle = "#484";
         context.stroke();
+
     // draw maxY - horz
         context.beginPath();
             context.moveTo(  0, minXYmaxXY[3] );
@@ -255,6 +244,10 @@ function draw_minmax()
 
 function find_convex()
 {
+    // TODO: point-in-triangle (slow)
+    // Fast point in polygon: https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+
+    
 }
 
 function init_convex()
@@ -346,6 +339,49 @@ console.log( "Hull: %d/%d", step, n-1 );
             ui_text_set_label();
         }
     } 
+}
+
+function point_in_polygon( x, y, vertices )
+{
+    var inside = false;
+    var i, n = vertices.length - 1, j = n - 1;
+
+    for( i = 0; i < n; j = i++ )
+    {
+
+    }
+}
+
+function IsPointInPoly( p, polygon )
+{
+    var isInside = false;
+    var i = 0, n = polygon.length, j = n-1;
+/*
+    var minX = polygon[0].x, maxX = polygon[0].x;
+    var minY = polygon[0].y, maxY = polygon[0].y;
+    var n = polygon.length, q;
+
+    for (var j = 1; j < n; ++j)
+    {
+        q = polygon[j];
+        minX = Math.min(q.x, minX);
+        maxX = Math.max(q.x, maxX);
+        minY = Math.min(q.y, minY);
+        maxY = Math.max(q.y, maxY);
+    }
+
+    if (p.x < minX || p.x > maxX || p.y < minY || p.y > maxY)
+        return false;
+*/
+    for (; i < polygon.length; j = i++)
+    {
+        if ( ((polygon[i].y > p.y) != (polygon[j].y > p.y))
+        && p.x < ((polygon[j].x - polygon[i].x) * (p.y - polygon[i].y)
+                / (polygon[j].y - polygon[i].y) + (      polygon[i].x)))
+            isInside = !isInside;
+    }
+
+    return isInside;
 }
 
 function ui_button_step_alpha( alpha )
