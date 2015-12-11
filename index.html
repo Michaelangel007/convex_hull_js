@@ -46,6 +46,8 @@ https://github.com/Michaelangel007/convex_hull_js
     var step        = 0;
 
     var minXYmaxXY  = [];
+    var minImaxI    = [];
+
     var convexIndex = [];
     var convexVerts = [];
 
@@ -126,11 +128,11 @@ function draw_tris( maxpoints, forcecolor )
 
 function find_minmax()
 {
-    var i, n = points.length;
-    var minX = points[ 0 ].x, iMinX = 0;
-    var maxX = points[ 0 ].x, iMaxX = 0;
-    var minY = points[ 0 ].y, iMinY = 0;
-    var maxY = points[ 0 ].y, iMaxY = 0;
+    var i, n  = points.length;
+    var vMinX = points[ 0 ].x, iMinX = 0;
+    var vMaxX = points[ 0 ].x, iMaxX = 0;
+    var vMinY = points[ 0 ].y, iMinY = 0;
+    var vMaxY = points[ 0 ].y, iMaxY = 0;
     var px, py;
 
     for( i = 1; i < n; ++i )
@@ -138,31 +140,35 @@ function find_minmax()
         px = points[ i ].x;
         py = points[ i ].y;
 
-        if( minX > px ) { minX = px; iMinX = i; console.log( "Potential MinX %d convex point: [%d]", px, i ); }
-        if( maxX < px ) { maxX = px; iMaxX = i; console.log( "Potential MaxX %d convex point: [%d]", px, i ); }
-        if( minY > py ) { minY = py; iMinY = i; console.log( "Potential MinY %d convex point: [%d]", py, i ); }
-        if( maxY < py ) { maxY = py; iMaxY = i; console.log( "Potential MaxY %d convex point: [%d]", py, i ); }
+        if( vMinX > px ) { vMinX = px; iMinX = i; console.log( "Potential MinX %d convex point: [%d]", px, i ); }
+        if( vMaxX < px ) { vMaxX = px; iMaxX = i; console.log( "Potential MaxX %d convex point: [%d]", px, i ); }
+        if( vMinY > py ) { vMinY = py; iMinY = i; console.log( "Potential MinY %d convex point: [%d]", py, i ); }
+        if( vMaxY < py ) { vMaxY = py; iMaxY = i; console.log( "Potential MaxY %d convex point: [%d]", py, i ); }
     }
 
-    minXYmaxXY = [ minX, minY, maxX, maxY ];
+    minXYmaxXY = [ vMinX, vMinY, vMaxX, vMaxY ];
+    minImaxI   = [ iMinX, iMinX, iMaxX, iMaxY ];
 
+/*
     convexIndex.push( iMinX );
     convexIndex.push( iMaxX );
     convexIndex.push( iMinY );
     convexIndex.push( iMaxY );
+*/
+    convexIndex.push( 0 );
+    convexIndex.push( 1 );
+    convexIndex.push( 2 );
+    for( i = 3; i < n; i++ )
+        culledIndex.push( i );
 
-    //convexVerts.push( points[ iMinX ] );
-    //convexVerts.push( points[ iMaxX ] );
-    //convexVerts.push( points[ iMinY ] );
-    //convexVerts.push( points[ iMaxY ] );
     console.log( "Partial Convex Hull Indices: " + convexIndex );
     for( i = 0; i < convexIndex.length; ++i )
     {
-        console.log( "#%d: [%d] %d,%d",
-            i, convexIndex[i],
-            points[ convexIndex[i] ].x,
-            points[ convexIndex[i] ].y
-        );
+        var x = points[ convexIndex[i] ].x;
+        var y = points[ convexIndex[i] ].y;
+        var p = { x: x, y: y };
+        convexVerts.push( p );
+console.log( "#%d: [%d] %d,%d", i, convexIndex[i], x, y );
     }
 }
 
@@ -243,16 +249,48 @@ function draw_minmax()
         context.stroke();
 }
 
+function add_convex()
+{
+    var i, p, n, len = culledIndex.length, v, inside, t;
+
+console.log( "Vertices dones: %d", step );
+    if( len > 0 )
+    {
+        i = culledIndex.pop(); // last unknown vertex
+        v = convexVerts;
+        v.push( points[ i ] );
+        n = v.length;
+
+convexIndex.push( i );
+
+        for( var j = 0; (n > 3) && j < n; ++j )
+        {   
+console.log( "Test [#%d/%d] in Convex Hull ", j, n );
+            // retest if any vertices are inside, if so remove
+            t      = convexIndex[ j ];
+            p      = points     [ t ];
+            inside = IsPointInPoly( p, v );
+console.log( "... %d", inside|0 );
+            if( inside )
+            {
+console.log( "... IN ... culling [%d] ", t, p.x, p.y );
+                convexIndex.splice( j, 1 );
+                convexVerts.splice( j, 1 );
+                n--;
+console.log( "... new Convex Hull Indices: %o", convexIndex );
+            }
+        }
+    }
+}
+
 function find_convex()
 {
-    // TODO: point-in-triangle (slow)
-    // Fast point in polygon: https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 }
 
 function init_convex()
 {
-    state  = 0;
-    step   = 0;
+    state = 0;
+    step  = 0;
 
     convexIndex = [];
     convexVerts = [];
@@ -284,7 +322,9 @@ function OnClickNext()
             break;
         case STATE_HULL_1:
             canvas_clear();
-            ui_button_step_alpha( "1.0" );
+            step = 3; // first 3 vertices process/added to convex hull
+            ui_text_set_convex_label();
+           ui_button_step_alpha( "1.0" );
             draw_tris  ( points.length, "#888" );
             draw_convex();
             draw_minmax();
@@ -292,6 +332,7 @@ function OnClickNext()
         case STATE_HULL_2:
             canvas_clear();
             ui_button_step_alpha( "0.0" );
+            find_convex();
             draw_convex();
             draw_minmax();
             break;
@@ -335,22 +376,17 @@ console.log( "Hull: %d/%d", step, n-1 );
         }
         else
         {
-            ui_text_set_label();
+            canvas_clear();
+            ui_text_set_convex_label();
+            draw_tris  ( points.length, "#888" );
+            add_convex();
+            draw_convex();
+            draw_minmax();
         }
     } 
 }
 
-function point_in_polygon( x, y, vertices )
-{
-    var inside = false;
-    var i, n = vertices.length - 1, j = n - 1;
-
-    for( i = 0; i < n; j = i++ )
-    {
-
-    }
-}
-
+// Fast point in polygon: https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 function IsPointInPoly( p, polygon )
 {
     var isInside = false;
@@ -398,6 +434,12 @@ function ui_text_set_label()
     p.innerHTML = "# Points: " + step + " / " + (points.length - 1)
 }
 
+function ui_text_set_convex_label()
+{
+    var p       = document.getElementById("pointsText" );
+    p.innerHTML = "Hull: " + step + " / " + (points.length - 1)
+}
+
 function main()
 {
     canvas  = document.getElementById("canvas");
@@ -430,8 +472,6 @@ function main()
     <button id="buttonNext" onclick="OnClickNext()">Next</button>
     <button id="buttonStep" onclick="OnClickStep()">Step</button>
     <span id="pointsText"></span>
-    <p>
     <canvas id="canvas" width="1152" height="648" style="border:1px solid #CCC;">
-    <p>
 </body>
 </html>
