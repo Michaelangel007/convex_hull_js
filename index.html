@@ -32,7 +32,7 @@ https://github.com/Michaelangel007/convex_hull_js
         905, 410,
         722, 565
     ];
-    var points = [];
+    var gaVertex = []; // Object { x: #, y: # }
     var colors = [
         "#800", "#F00", "#F80", "#FF0",
         "#8F0", "#0F0", "#0F8", "#0FF",
@@ -155,12 +155,14 @@ function canvas_clear()
 
 function draw_points()
 {
-    var i, nx, ny, n = points.length, px = points[0].x, py = points[1].y;
+    var i, nx, ny, n = gaVertex.length,
+        px = gaVertex[0].x,
+        py = gaVertex[1].y;
 
     for( i = 0; i < n; ++i )
     {
-        nx = points[ i ].x;
-        ny = points[ i ].y;
+        nx = gaVertex[ i ].x;
+        ny = gaVertex[ i ].y;
 
 if(0) // 1x1 pixel
         {
@@ -183,7 +185,7 @@ else // 3x3 pixels
 function draw_tris( maxpoints, forcecolor )
 {
     var color,c = colors.length;
-    var i, j, n = points.length;
+    var i, j, n = gaVertex.length;
     var px, py, nx, ny, len;
 
     if( maxpoints === undefined )
@@ -203,13 +205,13 @@ function draw_tris( maxpoints, forcecolor )
         else
             color = colors[ i % c ];
 
-        px = points[ i ].x;
-        py = points[ i ].y;
+        px = gaVertex[ i ].x;
+        py = gaVertex[ i ].y;
 
         for( j = i+1; j < n; ++j )
         {
-            nx = points[ j ].x;
-            ny = points[ j ].y;
+            nx = gaVertex[ j ].x;
+            ny = gaVertex[ j ].y;
 
             context.beginPath();
                 context.moveTo( px, py );
@@ -222,17 +224,17 @@ function draw_tris( maxpoints, forcecolor )
 
 function find_minmax()
 {
-    var i, n  = points.length;
-    var vMinX = points[ 0 ].x, iMinX = 0;
-    var vMaxX = points[ 0 ].x, iMaxX = 0;
-    var vMinY = points[ 0 ].y, iMinY = 0;
-    var vMaxY = points[ 0 ].y, iMaxY = 0;
+    var i, n  = gaVertex.length;
+    var vMinX = gaVertex[ 0 ].x, iMinX = 0;
+    var vMaxX = gaVertex[ 0 ].x, iMaxX = 0;
+    var vMinY = gaVertex[ 0 ].y, iMinY = 0;
+    var vMaxY = gaVertex[ 0 ].y, iMaxY = 0;
     var px, py;
 
     for( i = 1; i < n; ++i )
     {
-        px = points[ i ].x;
-        py = points[ i ].y;
+        px = gaVertex[ i ].x;
+        py = gaVertex[ i ].y;
 
         if( vMinX > px ) { vMinX = px; iMinX = i; if(_debug) console.log( "Potential MinX %d convex point: [%d]", px, i ); }
         if( vMaxX < px ) { vMaxX = px; iMaxX = i; if(_debug) console.log( "Potential MaxX %d convex point: [%d]", px, i ); }
@@ -258,9 +260,9 @@ function find_minmax()
 if(_debug) console.log( "Partial Convex Hull Indices: " + convexIndex );
     for( i = 0; i < convexIndex.length; ++i )
     {
-        var x = points[ convexIndex[i] ].x;
-        var y = points[ convexIndex[i] ].y;
-        var p = { x: x, y: y };
+        var x = gaVertex[ convexIndex[i] ].x;
+        var y = gaVertex[ convexIndex[i] ].y;
+        var p = { x: x, y: y }; // Optimized/inline: vec2_make()
         convexVerts.push( p );
 if(_debug) console.log( "#%d: [%d] %d,%d", i, convexIndex[i], x, y );
     }
@@ -269,19 +271,21 @@ if(_debug) console.log( "#%d: [%d] %d,%d", i, convexIndex[i], x, y );
 function draw_convex()
 {
     var color,c = colors.length;
-    var i, j, n = points.length;
+    var i, j, n = gaVertex.length;
     var px, py, nx, ny, len = convexIndex.length;
 
-    i = 0;
-    px = points[ convexIndex[ i ] ].x;
-    py = points[ convexIndex[ i ] ].y;
+    i  = 0;
+    j  = convexIndex[ i ];
+    px = gaVertex[ j ].x;
+    py = gaVertex[ j ].y;
 
     for( i = 1; i < len; ++i )
     {
         color = "#F00";
 
-        nx = points[ convexIndex[ i ] ].x;
-        ny = points[ convexIndex[ i ] ].y;
+        j  = convexIndex[ i ];
+        nx = gaVertex[ j ].x;
+        ny = gaVertex[ j ].y;
 
 if(0) // corner points
         {
@@ -301,9 +305,10 @@ if(0) // corner points
     }
 
     // Join last to first
-        i = 0;
-        nx = points[ convexIndex[ i ] ].x;
-        ny = points[ convexIndex[ i ] ].y;
+        i  = 0;
+        j  = convexIndex[ i ];
+        nx = gaVertex[ j ].x;
+        ny = gaVertex[ j ].y;
 
         context.beginPath();
             context.moveTo( px, py );
@@ -353,7 +358,7 @@ if(_debug) console.log( "Vertices dones: %d", step );
     {
         i = culledIndex.pop(); // last unknown vertex
         v = convexVerts;
-        v.push( points[ i ] );
+        v.push( gaVertex[ i ] );
         n = v.length;
 
 convexIndex.push( i );
@@ -363,7 +368,7 @@ convexIndex.push( i );
 if(_debug) console.log( "Test [#%d/%d] in Convex Hull ", j, n );
             // retest if any vertices are inside, if so remove
             t      = convexIndex[ j ];
-            p      = points     [ t ];
+            p      = gaVertex   [ t ];
             inside = IsPointInPoly( p, v );
 if(_debug) console.log( "... %d", inside|0 );
             if( inside )
@@ -420,7 +425,7 @@ function OnClickNext()
             step = 3; // first 3 vertices process/added to convex hull
             ui_text_set_convex_label();
            ui_button_step_alpha( "1.0" );
-            draw_tris  ( points.length, "#888" );
+            draw_tris  ( gaVertex.length, "#888" );
             draw_convex();
             draw_minmax();
             break;
@@ -444,7 +449,7 @@ function OnClickStep()
     if( giState === STATE_POINT )
     {
         ++step;
-        var n = points.length;
+        var n = gaVertex.length;
 
 if(_debug) console.log( "Step: %d/%d", step, n-1 );
 
@@ -464,7 +469,7 @@ if(_debug) console.log( "Step: %d/%d", step, n-1 );
     if( giState === STATE_HULL_1 )
     {
         ++step;
-        var n = points.length;
+        var n = gaVertex.length;
 
 if(_debug) console.log( "Hull: %d/%d", step, n-1 );
 
@@ -477,7 +482,7 @@ if(_debug) console.log( "Hull: %d/%d", step, n-1 );
         {
             canvas_clear();
             ui_text_set_convex_label();
-            draw_tris  ( points.length, "#888" );
+            draw_tris  ( gaVertex.length, "#888" );
             add_convex();
             draw_convex();
             draw_minmax();
@@ -530,13 +535,13 @@ function ui_button_step_alpha( alpha )
 function ui_text_set_label()
 {
     var p       = document.getElementById("pointsText" );
-    p.innerHTML = "# Points: " + step + " / " + (points.length - 1);
+    p.innerHTML = "# Points: " + step + " / " + (gaVertex.length - 1);
 }
 
 function ui_text_set_convex_label()
 {
     var p       = document.getElementById("pointsText" );
-    p.innerHTML = "Hull: " + step + " / " + (points.length - 1);
+    p.innerHTML = "Hull: " + step + " / " + (gaVertex.length - 1);
 }
 
 function main()
@@ -548,12 +553,12 @@ function main()
 
     ui_button_step_alpha( "0.0" );
 
-    // Convert interweaved raw points into nice .x y object
+    // Convert interweaved raw points into nice point .x .y object
     var n = gaPointsXY.length;
     for( var i = 0; i < n; i += 2 )
     {
         var p = { x: gaPointsXY[i+0], y: gaPointsXY[i+1] }; // Optimized/Inlined: vec2_make();
-        points[ i/2 ] = p;
+        gaVertex[ i/2 ] = p;
     }
 
     init_convex();
