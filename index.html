@@ -6,6 +6,7 @@ https://github.com/Michaelangel007/convex_hull_js
     <head>
         <script>
 "use strict";
+    var _debug = true;
 
     var canvas, context, cw, ch;
     var raw_points = 
@@ -233,10 +234,10 @@ function find_minmax()
         px = points[ i ].x;
         py = points[ i ].y;
 
-        if( vMinX > px ) { vMinX = px; iMinX = i; console.log( "Potential MinX %d convex point: [%d]", px, i ); }
-        if( vMaxX < px ) { vMaxX = px; iMaxX = i; console.log( "Potential MaxX %d convex point: [%d]", px, i ); }
-        if( vMinY > py ) { vMinY = py; iMinY = i; console.log( "Potential MinY %d convex point: [%d]", py, i ); }
-        if( vMaxY < py ) { vMaxY = py; iMaxY = i; console.log( "Potential MaxY %d convex point: [%d]", py, i ); }
+        if( vMinX > px ) { vMinX = px; iMinX = i; if(_debug) console.log( "Potential MinX %d convex point: [%d]", px, i ); }
+        if( vMaxX < px ) { vMaxX = px; iMaxX = i; if(_debug) console.log( "Potential MaxX %d convex point: [%d]", px, i ); }
+        if( vMinY > py ) { vMinY = py; iMinY = i; if(_debug) console.log( "Potential MinY %d convex point: [%d]", py, i ); }
+        if( vMaxY < py ) { vMaxY = py; iMaxY = i; if(_debug) console.log( "Potential MaxY %d convex point: [%d]", py, i ); }
     }
 
     minXYmaxXY = [ vMinX, vMinY, vMaxX, vMaxY ];
@@ -254,14 +255,14 @@ function find_minmax()
     for( i = 3; i < n; i++ )
         culledIndex.push( i );
 
-    console.log( "Partial Convex Hull Indices: " + convexIndex );
+if(_debug) console.log( "Partial Convex Hull Indices: " + convexIndex );
     for( i = 0; i < convexIndex.length; ++i )
     {
         var x = points[ convexIndex[i] ].x;
         var y = points[ convexIndex[i] ].y;
         var p = { x: x, y: y };
         convexVerts.push( p );
-console.log( "#%d: [%d] %d,%d", i, convexIndex[i], x, y );
+if(_debug) console.log( "#%d: [%d] %d,%d", i, convexIndex[i], x, y );
     }
 }
 
@@ -346,7 +347,8 @@ function add_convex()
 {
     var i, p, n, len = culledIndex.length, v, inside, t;
 
-console.log( "Vertices dones: %d", step );
+if(_debug) console.log( "Vertices dones: %d", step );
+
     if( len > 0 )
     {
         i = culledIndex.pop(); // last unknown vertex
@@ -358,19 +360,19 @@ convexIndex.push( i );
 
         for( var j = 0; (n > 3) && j < n; ++j )
         {   
-console.log( "Test [#%d/%d] in Convex Hull ", j, n );
+if(_debug) console.log( "Test [#%d/%d] in Convex Hull ", j, n );
             // retest if any vertices are inside, if so remove
             t      = convexIndex[ j ];
             p      = points     [ t ];
             inside = IsPointInPoly( p, v );
-console.log( "... %d", inside|0 );
+if(_debug) console.log( "... %d", inside|0 );
             if( inside )
             {
-console.log( "... IN ... culling [%d] ", t, p.x, p.y );
+if(_debug) console.log( "... IN ... culling [%d] ", t, p.x, p.y );
                 convexIndex.splice( j, 1 );
                 convexVerts.splice( j, 1 );
                 n--;
-console.log( "... new Convex Hull Indices: %o", convexIndex );
+if(_debug) console.log( "... new Convex Hull Indices: %o", convexIndex );
             }
         }
     }
@@ -443,7 +445,9 @@ function OnClickStep()
     {
         ++step;
         var n = points.length;
-console.log( "Step: %d/%d", step, n-1 );
+
+if(_debug) console.log( "Step: %d/%d", step, n-1 );
+
         if( step > (n-1) )
         {
             step = (n-1) ;
@@ -461,7 +465,9 @@ console.log( "Step: %d/%d", step, n-1 );
     {
         ++step;
         var n = points.length;
-console.log( "Hull: %d/%d", step, n-1 );
+
+if(_debug) console.log( "Hull: %d/%d", step, n-1 );
+
         if( step > (n-1) )
         {
             step = 0;
