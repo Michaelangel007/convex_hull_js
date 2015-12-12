@@ -9,7 +9,7 @@ https://github.com/Michaelangel007/convex_hull_js
     var _debug = true;
 
     var canvas, context, cw, ch;
-    var raw_points = 
+    var gaPointsXY = // Raw x,y points
     [
         201, 129,
         380, 133,
@@ -548,10 +548,11 @@ function main()
 
     ui_button_step_alpha( "0.0" );
 
-    var n = raw_points.length;
+    // Convert interweaved raw points into nice .x y object
+    var n = gaPointsXY.length;
     for( var i = 0; i < n; i += 2 )
     {
-        var p = { x: raw_points[i+0], y: raw_points[i+1] };
+        var p = { x: gaPointsXY[i+0], y: gaPointsXY[i+1] }; // Optimized/Inlined: vec2_make();
         points[ i/2 ] = p;
     }
 
