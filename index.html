@@ -54,6 +54,99 @@ https://github.com/Michaelangel007/convex_hull_js
     var culledIndex = [];
     var culledPoints= [];
 
+
+// === Utility ===
+
+    /** Create a point from x and y coordinates.
+        @return {Point}
+    */
+    function vec2_make( x0, y0 )
+    {
+        return { x: x0, y: y0 };
+    }
+
+    /** Return vector from point `a` to point `b`.
+        @param {Point} a
+        @param {Point} b
+        @return {Vec2} b-a
+    */
+    function vec2_sub( a, b )
+    {
+        var    d = { x: b.x - a.x, y: b.y - a.y };
+        return d;
+    }
+
+    /** Calculate the 2D Cross Product (scalar)
+        The cross product is only defined for dimensions 3 and 7.
+        We project/extend 2D vectors to lay in the XY plane;
+        the cross product bivector comes out/into the Z plane when we
+        take the determinant of:
+
+            |i  j  k|
+            |Ax Ay 0|
+            |Bx By 0|
+
+           = (Ay*0-By*0) - (Ax*0-Bx*0) + (Ax*By-Bx*Ay)
+           = AxBy - AyBx
+
+        We only care about the scalar as the sign will tell use the winding order:
+            Sign   Winding
+            -      CW
+            +      CCW
+    */
+    function vec2_cross( a, b )
+    {
+        var    z = a.x*b.y - a.y*b.x;
+        return z;
+    }
+
+    /** Given any triangle vertex points in any order determine the winding order.
+        @param  {Tri} p1 - Vertex point #1
+        @param  {Tri} p2 - Vertex point #2
+        @param  {Tri} p3 - Vertex point #3
+        @return {Boolean} Returns true if Clockwise, false if Counter-Clockwise
+        @example Given 3 points, p1, p2, and p3:
+
+                    _U
+              Y     /|
+              ^    2
+              |   /|
+              |  / |
+              | 1--3-->V
+              |
+            <-+------>X
+              |
+              v
+
+        The winding order will be determined by the cross product of:
+
+            vec2 U = p2 - p1
+            vec2 V = p3 - p1
+            scalar = U x V   // 2D cross product
+            if (scaler < 0)
+                CW
+            else
+                CCW
+
+        For example:
+            v1 = <1,1>
+            v2 = <2,2>
+            v3 = <2,1>
+            U  = <2-1,2-1> = <1,1>
+            V  = <2-1,1-1> = <1,0>
+            UxV= 1*0-1*1   = -1
+            -1 < 0 === CW
+    */
+    function IsWindingClockwise2( p1, p2, p3 )
+    {
+        var     u = vec2_sub  ( p1, p2 );
+        var     v = vec2_sub  ( p1, p3 );
+        var     z = vec2_cross(  u,  v );
+        return (z < 0);
+    }
+
+
+// === Implementation ===
 function canvas_clear()
 {
     context.clearRect(0, 0, canvas.width, canvas.height);
