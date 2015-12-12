@@ -58,6 +58,17 @@ https://github.com/Michaelangel007/convex_hull_js
     var giState     = STATE_INIT;
     var step        = 0;
 
+    var gaStatusText =
+    [
+         "Press NEXT to begin ..."          // STATE_INIT
+        ,"# Points: "                       // STATE_POINT
+        ,"Press NEXT to find min/max X & Y" // STATE_LINES
+        ,"" // STATE_BOX
+        ,"Hull: " // STATE_HULL_1
+        ,"Done!"  // STATE_HULL_2
+        , // STATE_DONE
+    ];
+
     var minXYmaxXY  = [];
     var minImaxI    = [];
 
@@ -554,7 +565,7 @@ function init()
 
     canvas_clear();
     ui_button_step_alpha( "0.0" );
-    ui_text_set_start_label();
+    ui_text_set_label();
 }
 
 function OnClickNext()
@@ -568,43 +579,47 @@ D( "State: %d", giState );
         case STATE_POINT:
             draw_points();
             ui_button_step_alpha( "1.0" );
-            ui_text_label_points();
             break;
+
         case STATE_LINES:
             ui_button_step_alpha( "0.0" );
             canvas_clear();
             draw_tris  ();
             draw_points();
             break;
+
         case STATE_BOX  :
             draw_tris  ();
             draw_points();
             find_minmax();
             draw_minmax();
             break;
+
         case STATE_HULL_1:
             canvas_clear();
             step = 0; // assume we have zero vertices processed/added to convex hull
-            ui_text_set_convex_label();
             ui_button_step_alpha( "1.0" );
             draw_tris  ( gaVertex.length, "#888" );
             draw_convex();
             draw_minmax();
             break;
+
         case STATE_HULL_2:
             canvas_clear();
             ui_button_step_alpha( "0.0" );
-            ui_text_set_done_label();
             find_convex();
             draw_convex();
             draw_minmax();
             break;
-//        case STATE_INIT:
+
+//        case STATE_RESTART:
         case STATE_DONE:
         default: // Init
             init();
             break;
     }
+
+    ui_text_set_label();
 }
 
 function OnClickStep()
@@ -623,7 +638,7 @@ D( "Step: %d/%d", step, n-1 );
         }
         else
         {
-            ui_text_label_points();
+            ui_text_set_label();
 
             draw_tris  ( step );
             draw_points();
@@ -649,7 +664,7 @@ D( "Hull: %d/%d", step, n-1 );
             draw_minmax();
 
             ++step;
-            ui_text_set_convex_label();
+            ui_text_set_label();
         }
     } 
 }
@@ -696,31 +711,21 @@ function ui_button_step_alpha( alpha )
     p.style.opacity = alpha
 }
 
-function ui_text_set_start_label()
+function ui_text_set_label()
 {
+    var text = gaStatusText[ giState ];
+
+    if( giState == STATE_POINT )
+        text += step + " / " + (gaVertex.length - 1);
+    else
+    if( giState == STATE_HULL_1 )
+        text += step + " / " + (gaVertex.length - 1);
+
     var p           = document.getElementById("pointsText" );
-    p.innerHTML     = "Waiting ...";
+    p.innerHTML     = text;
     p.style.opacity = "1.0"
 }
 
-function ui_text_label_points()
-{
-    var p       = document.getElementById("pointsText" );
-    p.innerHTML = "# Points: " + step + " / " + (gaVertex.length - 1);
-}
-
-function ui_text_set_convex_label()
-{
-    var p       = document.getElementById("pointsText" );
-    p.innerHTML = "Hull: " + step + " / " + (gaVertex.length - 1);
-}
-
-function ui_text_set_done_label()
-{
-    var p           = document.getElementById("pointsText" );
-    p.innerHTML     = "Done!";
-    p.style.opacity = "1.0"
-}
 
 function main()
 {
