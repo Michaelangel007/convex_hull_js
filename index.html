@@ -319,7 +319,7 @@ D( "Partial Convex Hull Indices: " + convexIndex );
     {
         var x = gaVertex[ convexIndex[i] ].x;
         var y = gaVertex[ convexIndex[i] ].y;
-        var p = { x: x, y: y }; // Optimized/inline: vec2_make()
+        var p = { x: x, y: y }; // Optimized/inline: vec2_make( x, y );
         convexVerts.push( p );
 
 D( "#%d: [%d] %d,%d", i, convexIndex[i], x, y );
