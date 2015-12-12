@@ -41,11 +41,13 @@ https://github.com/Michaelangel007/convex_hull_js
         722, 565
     ];
     var gaVertex = []; // Object { x: #, y: # }
+
     var colors = [
         "#800", "#F00", "#F80", "#FF0",
         "#8F0", "#0F0", "#0F8", "#0FF",
         "#08F", "#00F", "#80F", "#F0F",
     ];
+
     var STATE_INIT  = 0;
     var STATE_POINT = 1;
     var STATE_LINES = 2;
@@ -241,6 +243,12 @@ function find_minmax()
     var vMaxY = gaVertex[ 0 ].y, iMaxY = 0;
     var px, py;
 
+    minXYmaxXY = [];
+    minImaxI   = [];
+
+    if( n < 3 ) // Need at least 3 vertex points!
+        return;
+
     for( i = 1; i < n; ++i )
     {
         px = gaVertex[ i ].x;
@@ -255,15 +263,53 @@ function find_minmax()
     minXYmaxXY = [ vMinX, vMinY, vMaxX, vMaxY ];
     minImaxI   = [ iMinX, iMinX, iMaxX, iMaxY ];
 
+D( "Potential Convex Hull Indices: " + minImaxI );
+
+    // We have either 3 or 4 points
+    // We need to make sure the winding order is consistent
+    // If we were only given 3 points we won't have 4 unique points; one will be a duplicate
+    // Therefore we generate an array with only unique indices
+    // http://stackoverflow.com/questions/9229645/remove-duplicates-from-javascript-array
+    var aUniq = minImaxI.reduce(
+        function( elemA, elemB )
+        {
+            if( elemA.indexOf( elemB ) < 0 )
+                elemA.push   ( elemB );
+            return elemA;
+        }, []
+    );
+
+    var isCW = IsWindingClockwise2(
+        gaVertex[ aUniq[0] ],
+        gaVertex[ aUniq[1] ],
+        gaVertex[ aUniq[2] ]
+    );
+
+D( "Potential Convex Hull CW.....: " + (isCW|0) );
+
+    if( !isCW )
+    {
+        // swap order of vertex #2 and #3 so it is CW
+        var temp = aUniq[1];
+        /*      */ aUniq[1]  = aUniq[2];
+        /*                  */ aUniq[2] = temp;
+    }
+
+    convexIndex.push( aUniq[0] );
+    convexIndex.push( aUniq[1] );
+    convexIndex.push( aUniq[2] );
+
 /*
     convexIndex.push( iMinX );
     convexIndex.push( iMaxX );
     convexIndex.push( iMinY );
     convexIndex.push( iMaxY );
-*/
     convexIndex.push( 0 );
     convexIndex.push( 1 );
     convexIndex.push( 2 );
+*/
+
+    // TODO: FIXME: We only need vertices that are NOT in the convexIndex list
     for( i = 3; i < n; i++ )
         culledIndex.push( i );
 
