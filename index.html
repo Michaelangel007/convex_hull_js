@@ -76,6 +76,17 @@ https://github.com/Michaelangel007/convex_hull_js
         return { x: x0, y: y0 };
     }
 
+    /** Calculates the distance squared between two points
+        @return {Number}
+    */
+    function vec2_distSquared( a, b )
+    {
+        var    dx = b.x - a.x;
+        var    dy = b.y - a.y;
+        var    d  = dx*dx + dy*dy;
+        return d;
+    }
+
     /** Return vector from point `a` to point `b`.
         @param {Point} a
         @param {Point} b
@@ -427,6 +438,7 @@ function draw_minmax()
         context.stroke();
 }
 
+// Enlarge the convex hull if necessary
 function add_convex( i )
 {
     var p, n = gaVertex.length,len = convexIndex.length, v, isCW, isInside, t;
@@ -449,12 +461,40 @@ D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
 
         if( !isInside )
         {
-            // Verify we hae a consistant winding order
+            // TODO: Find the nearest 2 convex hull vertices as we need to insert the new point inbetween them
+            var iClosest1  = 0;
+            var iClosest2  = 1;
+            var nDistance1 = vec2_distSquared( p, convexVerts[ iClosest1 ] ); // distance from point p to current convex hull vertex
+            var nDistance2 = vec2_distSquared( p, convexVerts[ iClosest2 ] );
+
+            // TODO: Find the nearest 2 convex hull vertices as we need to insert the new point inbetween them
+            for( var j = 2; j < len; ++j )
+            {
+//                if( (j == iClosest1 )
+//                ||  (j == iClosest2 ))
+//                    continue;
+
+                // d0 ? d1   d ? d2  Action
+                //    <        <
+                //    <        >
+                //    >        <
+                //    >        >     Ignore
+                var nDistance0 = vec2_distSquared( p, convexVerts[ j ] );
+//                if((nDistance0 < nDistance1) && (nDistance1 < nDistance2)) iClosest1 = j;
+//                if((nDistance0 < nDistance2) && (nDistance2 < nDistance1)) iClosest2 = j;
+                if( nDistance0 < nDistance1 ) { iClosest1  = j; nDistance1 = nDistance0; }
+                else
+                if( nDistance0 < nDistance2 ) { iClosest2  = j; nDistance2 = nDistance0; }
+            }
+
+            j = len - 2;
+
+            // Verify we have a consistant winding order
             // of the last 2 convex hull verts plus the new one
 
             isCW = IsWindingClockwise2(
-                convexIndex[ len - 2 ],
-                convexIndex[ len - 1 ],
+                convexIndex[ j + 0 ],
+                convexIndex[ j + 1 ],
                 p
             );
 
