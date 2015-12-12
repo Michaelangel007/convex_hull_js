@@ -46,12 +46,14 @@ https://github.com/Michaelangel007/convex_hull_js
         "#8F0", "#0F0", "#0F8", "#0FF",
         "#08F", "#00F", "#80F", "#F0F",
     ];
-    var giState     = 0;
+    var STATE_INIT  = 0;
     var STATE_POINT = 1;
     var STATE_LINES = 2;
     var STATE_BOX   = 3;
     var STATE_HULL_1= 4;
     var STATE_HULL_2= 5;
+    var STATE_DONE  = 6;
+    var giState     = STATE_INIT;
     var step        = 0;
 
     var minXYmaxXY  = [];
@@ -399,25 +401,35 @@ function find_convex()
 
 function init_convex()
 {
-    giState = 0;
-    step  = 0;
-
     convexIndex = [];
     convexVerts = [];
+}
 
-    ui_text_set_label();
+function init()
+{
+    giState = STATE_INIT;
+    step  = 0;
+
+    init_convex();
+
+    canvas_clear();
+    ui_button_step_alpha( "0.0" );
+    ui_text_set_start_label();
 }
 
 function OnClickNext()
 {
     ++giState;
 
+D( "State: %d", giState );
+
     switch( giState )
     {
         case STATE_POINT:
             draw_points();
             ui_button_step_alpha( "1.0" );
-            break;
+            ui_text_label_points();
+           break;
         case STATE_LINES:
             ui_button_step_alpha( "0.0" );
             canvas_clear();
@@ -434,7 +446,7 @@ function OnClickNext()
             canvas_clear();
             step = 3; // first 3 vertices process/added to convex hull
             ui_text_set_convex_label();
-           ui_button_step_alpha( "1.0" );
+            ui_button_step_alpha( "1.0" );
             draw_tris  ( gaVertex.length, "#888" );
             draw_convex();
             draw_minmax();
@@ -442,14 +454,15 @@ function OnClickNext()
         case STATE_HULL_2:
             canvas_clear();
             ui_button_step_alpha( "0.0" );
+            ui_text_set_done_label();
             find_convex();
             draw_convex();
             draw_minmax();
             break;
-        default:
-            canvas_clear();
-            ui_button_step_alpha( "0.0" );
-            init_convex();
+//        case STATE_INIT:
+        case STATE_DONE:
+        default: // Init
+            init();
             break;
     }
 }
@@ -470,7 +483,7 @@ D( "Step: %d/%d", step, n-1 );
         }
         else
         {
-            ui_text_set_label();
+            ui_text_label_points();
 
             draw_tris  ( step );
             draw_points();
@@ -542,7 +555,14 @@ function ui_button_step_alpha( alpha )
     p.style.opacity = alpha
 }
 
-function ui_text_set_label()
+function ui_text_set_start_label()
+{
+    var p           = document.getElementById("pointsText" );
+    p.innerHTML     = "Waiting ...";
+    p.style.opacity = "1.0"
+}
+
+function ui_text_label_points()
 {
     var p       = document.getElementById("pointsText" );
     p.innerHTML = "# Points: " + step + " / " + (gaVertex.length - 1);
@@ -552,6 +572,13 @@ function ui_text_set_convex_label()
 {
     var p       = document.getElementById("pointsText" );
     p.innerHTML = "Hull: " + step + " / " + (gaVertex.length - 1);
+}
+
+function ui_text_set_done_label()
+{
+    var p           = document.getElementById("pointsText" );
+    p.innerHTML     = "Done!";
+    p.style.opacity = "1.0"
 }
 
 function main()
@@ -573,7 +600,7 @@ D( "Convert PointXY -> Vertex[]: %d", n );
     }
 
 D( "Initalize convex hull..." );
-    init_convex();
+    init();
 
 //    init_convex();
 //    draw_tris  ();
