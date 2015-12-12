@@ -285,7 +285,7 @@ D( "Potential Convex Hull Indices: " + minImaxI );
         gaVertex[ aUniq[2] ]
     );
 
-D( "Potential Convex Hull CW.....: " + (isCW|0) );
+D( "Potential Convex Hull is CW..: " + (isCW|0) );
 
     if( !isCW )
     {
@@ -294,6 +294,15 @@ D( "Potential Convex Hull CW.....: " + (isCW|0) );
         /*      */ aUniq[1]  = aUniq[2];
         /*                  */ aUniq[2] = temp;
     }
+
+    isCW = IsWindingClockwise2(
+        gaVertex[ aUniq[0] ],
+        gaVertex[ aUniq[1] ],
+        gaVertex[ aUniq[2] ]
+    );
+
+D( "Verify Convex Hull is now CW : " + (isCW|0) );
+
 
     convexIndex.push( aUniq[0] );
     convexIndex.push( aUniq[1] );
