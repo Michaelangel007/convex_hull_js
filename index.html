@@ -520,29 +520,7 @@ D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
                 convexIndex.push( i )
                 convexVerts.push( p );
             }
-/*
-            v = convexVerts;
-            v.push( gaVertex[ i ] );
-            n = v.length;
-
-            convexIndex.push( i );
-            for( var j = 0; (n > 3) && j < n; ++j )
-            {
-            // retest if any vertices are inside, if so remove
-            t      = convexIndex[ j ];
-            p      = gaVertex   [ t ];
-            inside = IsPointInPoly( p, v );
-D( "... %d", inside|0 );
-            if( inside )
-            {
-D( "... IN ... culling [%d] ", t, p.x, p.y );
-                convexIndex.splice( j, 1 );
-                convexVerts.splice( j, 1 );
-                n--;
-D( "... new Convex Hull Indices: %o", convexIndex );
-                }
-*/
-            }
+        }
     }
 }
 
