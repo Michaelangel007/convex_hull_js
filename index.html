@@ -267,7 +267,8 @@ function draw_tris( maxpoints, forcecolor )
 
 function find_minmax()
 {
-    var i, n  = gaVertex.length;
+    var i, j, k;
+    var n     = gaVertex.length;
     var vMinX = gaVertex[ 0 ].x, iMinX = 0;
     var vMaxX = gaVertex[ 0 ].x, iMaxX = 0;
     var vMinY = gaVertex[ 0 ].y, iMinY = 0;
@@ -335,9 +336,18 @@ D( "Potential Convex Hull is CW..: " + (isCW|0) );
 D( "Verify Convex Hull is now CW : " + (isCW|0) );
 
     // The (winding) order IS important
-    convexIndex.push( aUniq[0] );
-    convexIndex.push( aUniq[1] );
-    convexIndex.push( aUniq[2] );
+    i = aUniq[ 0 ];
+    j = aUniq[ 1 ];
+    k = aUniq[ 2 ];
+
+    convexIndex.push( i );
+    convexIndex.push( j );
+    convexIndex.push( k );
+
+    // Mirror structure -- needed to test point in polygon
+    convexVerts.push( gaVertex[ i ] );
+    convexVerts.push( gaVertex[ j ] );
+    convexVerts.push( gaVertex[ k ] );
 
 D( "Initial Convex Hull Indices: " + convexIndex );
 
@@ -373,9 +383,6 @@ D( "Partial Convex Hull Indices: " + convexIndex );
         var t = convexIndex[ i ];
         var x = gaVertex[ t ].x;
         var y = gaVertex[ t ].y;
-        var p = { x: x, y: y }; // Optimized/inline: vec2_make( x, y );
-        convexVerts.push( p ); // Mirror structure to test point in polygon
-
 D( "#%d: [%d] %d,%d", i, convexIndex[i], x, y );
     }
 }
