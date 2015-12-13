@@ -16,6 +16,8 @@ https://github.com/Michaelangel007/convex_hull_js
             console.log.apply( console, arguments );
     }
 
+    var giDebugVert = 0;
+
     var canvas, context, cw, ch;
     var gaPointsXY = // Raw x,y points
     [
@@ -657,6 +659,44 @@ D( "Hull: %d/%d", step, n-1 );
     }
 }
 
+function OnClickDebugPrevVert()
+{
+    if( giState == STATE_HULL_1 )
+        OnClickStep( false );
+
+    var n = gaVertex.length - 1;
+
+    --giDebugVert;
+    if( giDebugVert < 0)
+        giDebugVert = gaVertex.length - 1;
+
+    var p = gaVertex[ giDebugVert ];
+    draw_point( p.x, p.y, "#F80", 9 );
+
+    var label           = document.getElementById( "debugThisVert" );
+    label.style.opacity = "1.0";
+    label.innerHTML     = giDebugVert;
+}
+
+function OnClickDebugNextVert()
+{
+    if( giState == STATE_HULL_1 )
+        OnClickStep( false );
+
+    var n = gaVertex.length - 1;
+
+    ++giDebugVert;
+    if( giDebugVert > n)
+        giDebugVert = 0;
+
+    var p = gaVertex[ giDebugVert ];
+    draw_point( p.x, p.y, "#F80", 9 );
+
+    var label           = document.getElementById( "debugThisVert" );
+    label.style.opacity = "1.0";
+    label.innerHTML     = giDebugVert;
+}
+
 // Fast point in polygon: https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 function IsPointInPoly( p, polygon )
 {
@@ -750,7 +790,10 @@ D( "Initalize ..." );
     <button id="buttonNext" onclick="OnClickNext( )">Next (stage) </button>
     <button id="buttonStep" onclick="OnClickStep(1)">(single) Step</button>
     <span id="pointsText"></span>
-    <p>
+<button id="debugPrevVert" onclick="OnClickDebugPrevVert()">Highlight Prev Vert </button>
+<button id="debugNextVert" onclick="OnClickDebugNextVert()">Highlight Next Vert </button>
+<span   id="debugThisVert"></span>
+   <p>
     <canvas id="canvas" width="1152" height="648" style="border:1px solid #CCC;">
 </body>
 </html>
