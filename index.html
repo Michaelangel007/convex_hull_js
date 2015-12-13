@@ -210,9 +210,7 @@ function draw_point( x, y, color, size )
 
 function draw_points()
 {
-    var i, nx, ny, n = gaVertex.length,
-        px = gaVertex[0].x,
-        py = gaVertex[1].y;
+    var i, nx, ny, n = gaVertex.length;
 
     for( i = 0; i < n; ++i )
     {
@@ -220,17 +218,9 @@ function draw_points()
         ny = gaVertex[ i ].y;
 
 if(0) // 1x1 pixel
-        {
-            context.beginPath();
-                context.moveTo( px    ,py     );
-                context.lineTo( px+0.5,py+0.5 );
-            context.strokeStyle = '#F00';
-            context.stroke();
-        }
+        draw_line( nx, ny, nx+0.5, ny+0.5, "#F00" );
 else // 3x3 pixels
-            draw_point( nx, ny );
-        px = nx;
-        py = ny;
+        draw_point( nx, ny, "#F00" );
     }
 }
 
