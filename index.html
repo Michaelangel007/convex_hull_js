@@ -185,6 +185,15 @@ function canvas_clear()
     context.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+function draw_line( x0, y0, x1, y1, color )
+{
+    context.beginPath();
+        context.moveTo( x0, y0 );
+        context.lineTo( x1, y1 );
+    context.strokeStyle = color;
+    context.stroke();
+}
+
 function draw_point( x, y, color, size )
 {
     if( !color )
@@ -256,11 +265,7 @@ function draw_tris( maxpoints, forcecolor )
             nx = gaVertex[ j ].x;
             ny = gaVertex[ j ].y;
 
-            context.beginPath();
-                context.moveTo( px, py );
-                context.lineTo( nx, ny );
-            context.strokeStyle = color;
-            context.stroke();
+            draw_line( px, py, nx, ny, color );
         }
     }
 }
@@ -412,11 +417,8 @@ if(0) // corner points
         }
         else
         {
-            context.beginPath();
-                context.moveTo( px, py );
-                context.lineTo( nx, ny );
-            context.strokeStyle = color;
-            context.stroke();
+            draw_line( px, py, nx, ny, color );
+
             px = nx;
             py = ny;
         }
@@ -428,11 +430,7 @@ if(0) // corner points
         nx = gaVertex[ j ].x;
         ny = gaVertex[ j ].y;
 
-        context.beginPath();
-            context.moveTo( px, py );
-            context.lineTo( nx, ny );
-        context.strokeStyle = color;
-        context.stroke();
+        draw_line( px, py, nx, ny, color );
 }
 
 function draw_minmax()
