@@ -675,25 +675,25 @@ D( "Step: %d/%d", step, n-1 );
 
 D( "Hull: %d/%d", step, n-1 );
 
-        if( step > n )
+        canvas_clear();
+        draw_tris  ( gaVertex.length, "#888" );
+
+        if( updateStep )
+            add_convex( step );
+
+        draw_convex();
+        draw_minmax();
+
+        if( updateStep )
+            ++step;
+
+        if( step >= n )
         {
             step = 0;
             OnClickNext();
         }
         else
         {
-            canvas_clear();
-            draw_tris  ( gaVertex.length, "#888" );
-
-            if( updateStep )
-                add_convex( step );
-
-            draw_convex();
-            draw_minmax();
-
-            if( updateStep )
-                ++step;
-
             draw_point( gaVertex[ step ].x, gaVertex[ step ].y, "#0F0", 7 );
             ui_text_set_label();
         }
