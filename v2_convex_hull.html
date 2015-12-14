@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<!--
+https://github.com/Michaelangel007/convex_hull_js
+-->
+<html>
+    <head>
+        <script>
+"use strict";
+    var _debug = true;
+    // Get rid of verbose : if(_debug) console.log( ... )
+    // And instead replace: D( "foo", bar ); // Debug only
+    function D( text )
+    {
+        var n = arguments.length;
+        if( _debug )
+            console.log.apply( console, arguments );
+    }
+
+    var canvas, context, cw, ch;
+    var gaPointsXY = // Raw x,y points
+    [
+        201, 129,
+        380, 133,
+        538, 106,
+        966, 194,
+        479, 193,
+        790, 125,
+        101, 338,
+        247, 265,
+        532, 255,
+        654, 272,
+        808, 234,
+        321, 323,
+        463, 329,
+        142, 509,
+        318, 439,
+        516, 411,
+        663, 379,
+        864, 371,
+        905, 410,
+        722, 565
+    ];
+    var gaVertex = []; // Object { x: #, y: # }
+
+    var colors = [
+        "#800", "#F00", "#F80", "#FF0",
+        "#8F0", "#0F0", "#0F8", "#0FF",
+        "#08F", "#00F", "#80F", "#F0F",
+    ];
+
+    var STATE_INIT  = 0;
+    var STATE_POINT = 1;
+    var STATE_LINES = 2;
+    var STATE_BOX   = 3;
+    var STATE_HULL_1= 4;
+    var STATE_HULL_2= 5;
+    var STATE_DONE  = 6;
+    var giState     = STATE_INIT;
+    var step        = 0;
+
+    var minXYmaxXY  = [];
+    var minImaxI    = [];
+
+    var convexIndex  = [];
+    var convexVerts  = [];
+    var unknownIndex = 0; // bitfield
+
+
+// === Utility ===
+
+    /** Create a point from x and y coordinates.
+        @return {Point}
+    */
+    function vec2_make( x0, y0 )
+    {
+        return { x: x0, y: y0 };
+    }
+
+    /** Calculates the distance squared between two points
+        @return {Number}
+    */
+    function vec2_distSquared( a, b )
+    {
+        var    dx = b.x - a.x;
+        var    dy = b.y - a.y;
+        var    d  = dx*dx + dy*dy;
+        return d;
+    }
+
+    /** Return vector from point `a` to point `b`.
+        @param {Point} a
+        @param {Point} b
+        @return {Vec2} b-a
+    */
+    function vec2_sub( a, b )
+    {
+        var    d = { x: b.x - a.x, y: b.y - a.y };
+        return d;
+    }
+
+    /** Calculate the 2D Cross Product (scalar)
+        The cross product is only defined for dimensions 3 and 7.
+        We project/extend 2D vectors to lay in the XY plane;
+        the cross product bivector comes out/into the Z plane when we
+        take the determinant of:
+
+            |i  j  k|
+            |Ax Ay 0|
+            |Bx By 0|
+
+           = (Ay*0-By*0) - (Ax*0-Bx*0) + (Ax*By-Bx*Ay)
+           = AxBy - AyBx
+
+        We only care about the scalar as the sign will tell use the winding order:
+            Sign   Winding
+            -      CW
+            +      CCW
+    */
+    function vec2_cross( a, b )
+    {
+        var    z = a.x*b.y - a.y*b.x;
+        return z;
+    }
+
+    /** Given any triangle vertex points in any order determine the winding order.
+        @param  {Tri} p1 - Vertex point #1
+        @param  {Tri} p2 - Vertex point #2
+        @param  {Tri} p3 - Vertex point #3
+        @return {Boolean} Returns true if Clockwise, false if Counter-Clockwise
+        @example Given 3 points, p1, p2, and p3:
+
+                    _U
+              Y     /|
+              ^    2
+              |   /|
+              |  / |
+              | 1--3-->V
+              |
+            <-+------>X
+              |
+              v
+
+        The winding order will be determined by the cross product of:
+
+            vec2 U = p2 - p1
+            vec2 V = p3 - p1
+            scalar = U x V   // 2D cross product
+            if (scaler < 0)
+                CW
+            else
+                CCW
+
+        For example:
+            v1 = <1,1>
+            v2 = <2,2>
+            v3 = <2,1>
+            U  = <2-1,2-1> = <1,1>
+            V  = <2-1,1-1> = <1,0>
+            UxV= 1*0-1*1   = -1
+            -1 < 0 === CW
+    */
+    function IsWindingClockwise2( p1, p2, p3 )
+    {
+        var     u = vec2_sub  ( p1, p2 );
+        var     v = vec2_sub  ( p1, p3 );
+        var     z = vec2_cross(  u,  v );
+        return (z < 0);
+    }
+
+
+// === Implementation ===
+function canvas_clear()
+{
+    context.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function draw_points()
+{
+    var i, nx, ny, n = gaVertex.length,
+        px = gaVertex[0].x,
+        py = gaVertex[1].y;
+
+    for( i = 0; i < n; ++i )
+    {
+        nx = gaVertex[ i ].x;
+        ny = gaVertex[ i ].y;
+
+if(0) // 1x1 pixel
+        {
+            context.beginPath();
+                context.moveTo( px    ,py     );
+                context.lineTo( px+0.5,py+0.5 );
+            context.strokeStyle = '#F00';
+            context.stroke();
+        }
+else // 3x3 pixels
+        {
+            context.fillStyle="#F00";
+            context.fillRect( nx-1, ny-1, 3, 3 );
+        }
+        px = nx;
+        py = ny;
+    }
+}
+
+function draw_tris( maxpoints, forcecolor )
+{
+    var color,c = colors.length;
+    var i, j, n = gaVertex.length;
+    var px, py, nx, ny, len;
+
+    if( maxpoints === undefined )
+        len = n-1;
+    else
+        len = maxpoints;
+
+    for( i = 0; i < len; ++i )
+    {
+        if( forcecolor !== undefined )
+            color = forcecolor
+        else
+        if( maxpoints !== undefined )
+            color = (i == maxpoints-1)
+                  ? colors[ i % c ]
+                  : "#000";
+        else
+            color = colors[ i % c ];
+
+        px = gaVertex[ i ].x;
+        py = gaVertex[ i ].y;
+
+        for( j = i+1; j < n; ++j )
+        {
+            nx = gaVertex[ j ].x;
+            ny = gaVertex[ j ].y;
+
+            context.beginPath();
+                context.moveTo( px, py );
+                context.lineTo( nx, ny );
+            context.strokeStyle = color;
+            context.stroke();
+        }
+    }
+}
+
+function find_minmax()
+{
+    var i, n  = gaVertex.length;
+    var vMinX = gaVertex[ 0 ].x, iMinX = 0;
+    var vMaxX = gaVertex[ 0 ].x, iMaxX = 0;
+    var vMinY = gaVertex[ 0 ].y, iMinY = 0;
+    var vMaxY = gaVertex[ 0 ].y, iMaxY = 0;
+    var px, py;
+
+    minXYmaxXY = [];
+    minImaxI   = [];
+
+    if( n < 3 ) // Need at least 3 vertex points!
+        return;
+
+    for( i = 1; i < n; ++i ) // Vertex[0] is both min & max until we inspect remainin vertices
+    {
+        px = gaVertex[ i ].x;
+        py = gaVertex[ i ].y;
+
+        if( vMinX > px ) { vMinX = px; iMinX = i; D( "Potential MinX %d convex point: [%d]", px, i ); }
+        if( vMaxX < px ) { vMaxX = px; iMaxX = i; D( "Potential MaxX %d convex point: [%d]", px, i ); }
+        if( vMinY > py ) { vMinY = py; iMinY = i; D( "Potential MinY %d convex point: [%d]", py, i ); }
+        if( vMaxY < py ) { vMaxY = py; iMaxY = i; D( "Potential MaxY %d convex point: [%d]", py, i ); }
+    }
+
+    minXYmaxXY = [ vMinX, vMinY, vMaxX, vMaxY ];
+    minImaxI   = [ iMinX, iMinY, iMaxX, iMaxY ];
+
+D( "Potential Convex Hull Indices: " + minImaxI );
+
+    // We have either 3 or 4 points
+    // We need to make sure the winding order is consistent
+    // If we were only given 3 points we won't have 4 unique points; one will be a duplicate
+    // Therefore we generate an array with only unique indices
+    // http://stackoverflow.com/questions/9229645/remove-duplicates-from-javascript-array
+    var aUniq = minImaxI.reduce(
+        function( elemA, elemB )
+        {
+            if( elemA.indexOf( elemB ) < 0 )
+                elemA.push   ( elemB );
+            return elemA;
+        }, []
+    );
+
+    var isCW = IsWindingClockwise2(
+        gaVertex[ aUniq[0] ],
+        gaVertex[ aUniq[1] ],
+        gaVertex[ aUniq[2] ]
+    );
+
+D( "Potential Convex Hull is CW..: " + (isCW|0) );
+
+    if( !isCW )
+    {
+        // swap order of vertex #2 and #3 so it is CW
+        var temp = aUniq[1];
+        /*      */ aUniq[1]  = aUniq[2];
+        /*                  */ aUniq[2] = temp;
+    }
+
+    isCW = IsWindingClockwise2(
+        gaVertex[ aUniq[0] ],
+        gaVertex[ aUniq[1] ],
+        gaVertex[ aUniq[2] ]
+    );
+
+D( "Verify Convex Hull is now CW : " + (isCW|0) );
+
+    // The (winding) order IS important
+    convexIndex.push( aUniq[0] );
+    convexIndex.push( aUniq[1] );
+    convexIndex.push( aUniq[2] );
+
+D( "Initial Convex Hull Indices: " + convexIndex );
+
+
+    // We only need to track vertices that are NOT in the convexIndex list.
+    // First we default to classify all vertices as unknown.
+    // Next we remove vertex indices where we know their status (inside/outside)
+    //
+    // Optimization: There is no point in keeping a dynamic array.
+    // Since we are doing set manipulation we can simply use a 32-int bitfield.
+    //
+    // While Javascript has tons of problems there are two specific problems that concern us:
+    // - There is no native Uint64 support
+    // - JS represents all numbers as float64 which is only 52-bits of integer precision
+    // We use a simple unsigned 32-bit for simplicity.
+    //
+    // Obviously if you have more then 32 vertices to test you will need to use multiple bit-masks.
+    // This is left as an excercise for the reader. :-)
+    // Hint: use Uint32Array
+    // https://www.khronos.org/registry/typedarray/specs/latest/#7
+    if( n > 31 )
+        console.log( "ERROR: More then 31 vertices in the convex hull -- ignoring remainig vertices!" );
+
+    unknownIndex  =  (1 <<        n) - 1; // All vertices are unknown
+    unknownIndex &= ~(1 << aUniq[0]);     // Don't need to re-test
+    unknownIndex &= ~(1 << aUniq[1]);     // the min/max vertices
+    unknownIndex &= ~(1 << aUniq[2]);     // since we know they are included in the convex hull (at least initially)
+
+D( "Partial Convex Hull Indices: " + convexIndex );
+
+    for( i = 0; i < convexIndex.length; ++i )
+    {
+        var t = convexIndex[ i ];
+        var x = gaVertex[ t ].x;
+        var y = gaVertex[ t ].y;
+        var p = { x: x, y: y }; // Optimized/inline: vec2_make( x, y );
+        convexVerts.push( p ); // Mirror structure to test point in polygon
+
+D( "#%d: [%d] %d,%d", i, convexIndex[i], x, y );
+    }
+}
+
+function draw_convex()
+{
+    var color,c = colors.length;
+    var i, j, n = gaVertex.length;
+    var px, py, nx, ny, len = convexIndex.length;
+
+    i  = 0;
+    j  = convexIndex[ i ];
+    px = gaVertex[ j ].x;
+    py = gaVertex[ j ].y;
+
+    for( i = 1; i < len; ++i )
+    {
+        color = "#F00";
+
+        j  = convexIndex[ i ];
+        nx = gaVertex[ j ].x;
+        ny = gaVertex[ j ].y;
+
+if(0) // corner points
+        {
+            context.fillStyle="#F00";
+            context.fillRect( nx-1, ny-1, 3, 3 );
+        }
+        else
+        {
+            context.beginPath();
+                context.moveTo( px, py );
+                context.lineTo( nx, ny );
+            context.strokeStyle = color;
+            context.stroke();
+            px = nx;
+            py = ny;
+        }
+    }
+
+    // Join last to first
+        i  = 0;
+        j  = convexIndex[ i ];
+        nx = gaVertex[ j ].x;
+        ny = gaVertex[ j ].y;
+
+        context.beginPath();
+            context.moveTo( px, py );
+            context.lineTo( nx, ny );
+        context.strokeStyle = color;
+        context.stroke();
+}
+
+function draw_minmax()
+{
+    // draw minX - vert
+        context.beginPath();
+            context.moveTo( minXYmaxXY[0],  0 );
+            context.lineTo( minXYmaxXY[0], ch );
+        context.strokeStyle = "#484";
+        context.stroke();
+
+    // draw minY - horz
+        context.beginPath();
+            context.moveTo(  0, minXYmaxXY[1] );
+            context.lineTo( cw, minXYmaxXY[1] );
+        context.strokeStyle = "#844";
+        context.stroke();
+
+    // draw maxX - vert
+        context.beginPath();
+            context.moveTo( minXYmaxXY[2],  0 );
+            context.lineTo( minXYmaxXY[2], ch );
+        context.strokeStyle = "#484";
+        context.stroke();
+
+    // draw maxY - horz
+        context.beginPath();
+            context.moveTo(  0, minXYmaxXY[3] );
+            context.lineTo( cw, minXYmaxXY[3] );
+        context.strokeStyle = "#844";
+        context.stroke();
+}
+
+// Enlarge the convex hull if necessary
+function add_convex( i )
+{
+    var p, n = gaVertex.length,len = convexIndex.length, v, isCW, isInside, t;
+
+D( "Vertices dones: %d,  UnknownVertsLeft:", i, unknownIndex.toString(16) );
+
+
+    var mask = (1 << i);
+    if( unknownIndex & mask ) // vertex is unknown
+    {
+        unknownIndex &= ~mask;
+
+        p = gaVertex[ i ];
+
+        // If the current point is inside the convex hull skip it
+        // Else we need to add it to the convex hull
+        isInside = IsPointInPoly( p, convexVerts );
+
+D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
+
+        if( !isInside )
+        {
+            // TODO: Find the nearest 2 convex hull vertices as we need to insert the new point inbetween them
+            var iClosest1  = 0;
+            var iClosest2  = 1;
+            var nDistance1 = vec2_distSquared( p, convexVerts[ iClosest1 ] ); // distance from point p to current convex hull vertex
+            var nDistance2 = vec2_distSquared( p, convexVerts[ iClosest2 ] );
+
+            // TODO: Find the nearest 2 convex hull vertices as we need to insert the new point inbetween them
+            for( var j = 2; j < len; ++j )
+            {
+//                if( (j == iClosest1 )
+//                ||  (j == iClosest2 ))
+//                    continue;
+
+                // d0 ? d1   d ? d2  Action
+                //    <        <
+                //    <        >
+                //    >        <
+                //    >        >     Ignore
+                var nDistance0 = vec2_distSquared( p, convexVerts[ j ] );
+//                if((nDistance0 < nDistance1) && (nDistance1 < nDistance2)) iClosest1 = j;
+//                if((nDistance0 < nDistance2) && (nDistance2 < nDistance1)) iClosest2 = j;
+                if( nDistance0 < nDistance1 ) { iClosest1  = j; nDistance1 = nDistance0; }
+                else
+                if( nDistance0 < nDistance2 ) { iClosest2  = j; nDistance2 = nDistance0; }
+            }
+
+            j = len - 2;
+
+            // Verify we have a consistant winding order
+            // of the last 2 convex hull verts plus the new one
+
+            isCW = IsWindingClockwise2(
+                convexIndex[ j + 0 ],
+                convexIndex[ j + 1 ],
+                p
+            );
+
+            if( isCW )
+            {
+                // insert new vertex before last vertex
+                convexIndex.splice( len-1, 0, i );
+                convexVerts.splice( len-1, 0, p );
+            }
+            else
+            {
+                convexIndex.push( i )
+                convexVerts.push( p );
+            }
+/*
+            v = convexVerts;
+            v.push( gaVertex[ i ] );
+            n = v.length;
+
+            convexIndex.push( i );
+            for( var j = 0; (n > 3) && j < n; ++j )
+            {
+            // retest if any vertices are inside, if so remove
+            t      = convexIndex[ j ];
+            p      = gaVertex   [ t ];
+            inside = IsPointInPoly( p, v );
+D( "... %d", inside|0 );
+            if( inside )
+            {
+D( "... IN ... culling [%d] ", t, p.x, p.y );
+                convexIndex.splice( j, 1 );
+                convexVerts.splice( j, 1 );
+                n--;
+D( "... new Convex Hull Indices: %o", convexIndex );
+                }
+*/
+            }
+    }
+}
+
+function find_convex()
+{
+}
+
+function init_convex()
+{
+    convexIndex = [];
+    convexVerts = [];
+}
+
+function init()
+{
+    giState = STATE_INIT;
+    step    = 0;
+
+    init_convex();
+
+    canvas_clear();
+    ui_button_step_alpha( "0.0" );
+    ui_text_set_start_label();
+}
+
+function OnClickNext()
+{
+    ++giState;
+
+D( "State: %d", giState );
+
+    switch( giState )
+    {
+        case STATE_POINT:
+            draw_points();
+            ui_button_step_alpha( "1.0" );
+            ui_text_label_points();
+            break;
+        case STATE_LINES:
+            ui_button_step_alpha( "0.0" );
+            canvas_clear();
+            draw_tris  ();
+            draw_points();
+            break;
+        case STATE_BOX  :
+            draw_tris  ();
+            draw_points();
+            find_minmax();
+            draw_minmax();
+            break;
+        case STATE_HULL_1:
+            canvas_clear();
+            step = 0; // assume we have zero vertices processed/added to convex hull
+            ui_text_set_convex_label();
+            ui_button_step_alpha( "1.0" );
+            draw_tris  ( gaVertex.length, "#888" );
+            draw_convex();
+            draw_minmax();
+            break;
+        case STATE_HULL_2:
+            canvas_clear();
+            ui_button_step_alpha( "0.0" );
+            ui_text_set_done_label();
+            find_convex();
+            draw_convex();
+            draw_minmax();
+            break;
+//        case STATE_INIT:
+        case STATE_DONE:
+        default: // Init
+            init();
+            break;
+    }
+}
+
+function OnClickStep()
+{
+    if( giState === STATE_POINT )
+    {
+        ++step;
+        var n = gaVertex.length;
+
+D( "Step: %d/%d", step, n-1 );
+
+        if( step > (n-1) )
+        {
+            step = (n-1) ;
+            OnClickNext();
+        }
+        else
+        {
+            ui_text_label_points();
+
+            draw_tris  ( step );
+            draw_points();
+        }
+    }
+    if( giState === STATE_HULL_1 )
+    {
+        var n = gaVertex.length;
+
+D( "Hull: %d/%d", step, n-1 );
+
+        if( step > n )
+        {
+            step = 0;
+            OnClickNext();
+        }
+        else
+        {
+            canvas_clear();
+            draw_tris  ( gaVertex.length, "#888" );
+            add_convex( step );
+            draw_convex();
+            draw_minmax();
+
+            ++step;
+            ui_text_set_convex_label();
+        }
+    } 
+}
+
+// Fast point in polygon: https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+function IsPointInPoly( p, polygon )
+{
+    var isInside = false;
+    var i = 0, n = polygon.length, j = n-1;
+/*
+    var minX = polygon[0].x, maxX = polygon[0].x;
+    var minY = polygon[0].y, maxY = polygon[0].y;
+    var n = polygon.length, q;
+
+    for (var j = 1; j < n; ++j)
+    {
+        q = polygon[j];
+        minX = Math.min(q.x, minX);
+        maxX = Math.max(q.x, maxX);
+        minY = Math.min(q.y, minY);
+        maxY = Math.max(q.y, maxY);
+    }
+
+    if (p.x < minX || p.x > maxX || p.y < minY || p.y > maxY)
+        return false;
+*/
+    for (; i < polygon.length; j = i++)
+    {
+        if ( ((polygon[i].y > p.y) != (polygon[j].y > p.y))
+        && p.x < ((polygon[j].x - polygon[i].x) * (p.y - polygon[i].y)
+                / (polygon[j].y - polygon[i].y) + (      polygon[i].x)))
+            isInside = !isInside;
+    }
+
+    return isInside;
+}
+
+function ui_button_step_alpha( alpha )
+{
+    var bs           = document.getElementById("buttonStep" );
+    bs.style.opacity = alpha;
+
+    var p           = document.getElementById("pointsText" );
+    p.style.opacity = alpha
+}
+
+function ui_text_set_start_label()
+{
+    var p           = document.getElementById("pointsText" );
+    p.innerHTML     = "Waiting ...";
+    p.style.opacity = "1.0"
+}
+
+function ui_text_label_points()
+{
+    var p       = document.getElementById("pointsText" );
+    p.innerHTML = "# Points: " + step + " / " + (gaVertex.length - 1);
+}
+
+function ui_text_set_convex_label()
+{
+    var p       = document.getElementById("pointsText" );
+    p.innerHTML = "Hull: " + step + " / " + (gaVertex.length - 1);
+}
+
+function ui_text_set_done_label()
+{
+    var p           = document.getElementById("pointsText" );
+    p.innerHTML     = "Done!";
+    p.style.opacity = "1.0"
+}
+
+function main()
+{
+    canvas  = document.getElementById("canvas");
+    context = canvas.getContext("2d");
+    cw      = canvas.width ;
+    ch      = canvas.height;
+
+    ui_button_step_alpha( "0.0" );
+
+    // Convert interweaved raw points into nice point .x .y object
+    var n = gaPointsXY.length;
+D( "Convert PointXY -> Vertex[]: %d", n );
+    for( var i = 0; i < n; i += 2 )
+    {
+        var p = { x: gaPointsXY[i+0], y: gaPointsXY[i+1] }; // Optimized/Inlined: vec2_make();
+        gaVertex[ i/2 ] = p;
+    }
+
+D( "Initalize ..." );
+    init();
+
+//    init_convex();
+//    draw_tris  ();
+//    draw_points();
+//    find_minmax();
+//    draw_minmax();
+//    find_convex();
+//    draw_convex();
+}
+        </script>
+    </head>
+<body onload="main()">
+    <button id="buttonNext" onclick="OnClickNext()">Next</button>
+    <button id="buttonStep" onclick="OnClickStep()">Step</button>
+    <span id="pointsText"></span>
+    <p>
+    <canvas id="canvas" width="1152" height="648" style="border:1px solid #CCC;">
+</body>
+</html>
