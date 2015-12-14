@@ -58,7 +58,7 @@ https://github.com/Michaelangel007/convex_hull_js
     var STATE_HULL  = 4;
     var STATE_DONE  = 5;
     var giState     = STATE_INIT;
-    var step        = 0;
+    var giStep      = 0; // Sub-State
 
     var gaStatusText =
     [
@@ -583,7 +583,7 @@ function init_convex()
 function init()
 {
     giState = STATE_INIT;
-    step    = 0;
+    giStep  = 0;
 
     init_convex();
 
@@ -620,7 +620,7 @@ D( "State: %d", giState );
             break;
 
         case STATE_HULL :
-            step = 0; // assume we have zero vertices processed/added to convex hull
+            giStep = 0; // assume we have zero vertices processed/added to convex hull
 
             ui_button_step_alpha( "1.0" );
 
@@ -646,52 +646,52 @@ D( "State: %d", giState );
 
 function OnClickStep( updateStep )
 {
+    var n = gaVertex.length;
+
     if( giState === STATE_POINT )
     {
-        ++step;
-        var n = gaVertex.length;
+        ++giStep;
 
-D( "Step: %d/%d", step, n-1 );
+D( "Step: %d/%d", giStep, n-1 );
 
-        if( step > (n-1) )
+        if( giStep > (n-1) )
         {
-            step = (n-1) ;
+            giStep = (n-1) ;
             OnClickNext();
         }
         else
         {
             ui_text_set_label();
 
-            draw_tris  ( step );
+            draw_tris  ( giStep );
             draw_points();
         }
     }
     if( giState === STATE_HULL )
     {
-        var n = gaVertex.length;
-
-D( "Hull: %d/%d", step, n-1 );
+D( "Hull: %d/%d", giStep, n-1 );
 
         canvas_clear();
         draw_tris  ( gaVertex.length, "#888" );
 
         if( updateStep )
-            add_convex( step );
+            add_convex( giStep );
 
         draw_convex();
         draw_minmax();
 
         if( updateStep )
-            ++step;
+            ++giStep;
 
-        if( step >= n )
+        if( giStep >= n )
         {
-            step = 0;
+            giStep = 0;
             OnClickNext();
         }
         else
         {
-            draw_point( gaVertex[ step ].x, gaVertex[ step ].y, "#0F0", 7 );
+            var p = gaVertex[ giStep ];
+            draw_point( p.x, p.y, "#0F0", 7 );
             ui_text_set_label();
         }
     }
@@ -782,10 +782,10 @@ function ui_text_set_label()
     var text = gaStatusText[ giState ];
 
     if( giState == STATE_POINT )
-        text += step + " / " + (gaVertex.length - 1);
+        text += giStep + " / " + (gaVertex.length - 1);
     else
     if( giState == STATE_HULL )
-        text += step + " / " + (gaVertex.length - 1);
+        text += giStep + " / " + (gaVertex.length - 1);
 
     var p           = document.getElementById("pointsText" );
     p.innerHTML     = text;
