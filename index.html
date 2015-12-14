@@ -19,6 +19,7 @@ https://github.com/Michaelangel007/convex_hull_js
     var giDebugVert = 0;
 
     var canvas, context, cw, ch;
+
     var gaPointsXY = // Raw x,y points NOTE: Origin top-left !
     [
         201, 129,
@@ -171,17 +172,19 @@ https://github.com/Michaelangel007/convex_hull_js
             V  = <2-1,1-1> = <1,0>
             UxV= 1*0-1*1   = -1
             -1 < 0 === CW
+        NOTE: Assumes the origin is in top left!
     */
     function IsWindingClockwise2( p1, p2, p3 )
     {
         var     u = vec2_sub  ( p1, p2 );
         var     v = vec2_sub  ( p1, p3 );
         var     z = vec2_cross(  u,  v );
-        return (z < 0);
+      //return (z < 0); // Origin top    left (RHCS) +Z out of screen
+        return (z > 0); // Origin bottom left (RHCS) +Z into   screen
     }
 
+// === Utility ===
 
-// === Implementation ===
 function canvas_clear()
 {
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -261,6 +264,8 @@ function draw_tris( maxpoints, forcecolor )
         }
     }
 }
+
+// === Implementation ===
 
 function find_minmax()
 {
@@ -506,6 +511,9 @@ D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
             }
 // p = 5
 // [2,3,6]
+// < 538, 106 >
+// < 966, 194 >
+// < 101, 338 ]
 // insert inbetween 2 & w
 //            j = len - 2;
 
@@ -693,7 +701,7 @@ function OnClickDebugPrevVert()
 
     var label           = document.getElementById( "debugThisVert" );
     label.style.opacity = "1.0";
-    label.innerHTML     = giDebugVert;
+    label.innerHTML     = "[ " + giDebugVert + " ].xy: " + p.x + "," + p.y;
 }
 
 function OnClickDebugNextVert()
@@ -712,7 +720,7 @@ function OnClickDebugNextVert()
 
     var label           = document.getElementById( "debugThisVert" );
     label.style.opacity = "1.0";
-    label.innerHTML     = giDebugVert;
+    label.innerHTML     = "[ " + giDebugVert + " ].xy: " + p.x + "," + p.y;
 }
 
 // Fast point in polygon: https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
@@ -793,6 +801,14 @@ D( "Convert PointXY -> Vertex[]: %d", n );
 
 D( "Initalize ..." );
     init();
+
+
+    var isCW = IsTriWindingClockwise( // 2, 3, 6
+        gaVertex[ 2 ],
+        gaVertex[ 3 ],
+        gaVertex[ 6 ]
+    );
+    console.log( "[ 2, 3, 6 ].winding CW: " + (isCW|0) );
 
 //    init_convex();
 //    draw_tris  ();
