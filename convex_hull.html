@@ -55,9 +55,8 @@ https://github.com/Michaelangel007/convex_hull_js
     var STATE_POINT = 1;
     var STATE_LINES = 2;
     var STATE_BOX   = 3;
-    var STATE_HULL_1= 4;
-    var STATE_HULL_2= 5;
-    var STATE_DONE  = 6;
+    var STATE_HULL  = 4;
+    var STATE_DONE  = 5;
     var giState     = STATE_INIT;
     var step        = 0;
 
@@ -67,9 +66,8 @@ https://github.com/Michaelangel007/convex_hull_js
         ,"# Points: "                       // STATE_POINT
         ,"Press NEXT to find min/max X & Y" // STATE_LINES
         ,"" // STATE_BOX
-        ,"Hull: " // STATE_HULL_1
-        ,"Done!"  // STATE_HULL_2
-        , // STATE_DONE
+        ,"Hull: " // STATE_HULL
+        ,"Done!"  // STATE_DONE
     ];
 
     var minXYmaxXY  = [];
@@ -621,7 +619,7 @@ D( "State: %d", giState );
             draw_minmax();
             break;
 
-        case STATE_HULL_1:
+        case STATE_HULL :
             step = 0; // assume we have zero vertices processed/added to convex hull
 
             ui_button_step_alpha( "1.0" );
@@ -629,7 +627,7 @@ D( "State: %d", giState );
             OnClickStep( false );
             break;
 
-        case STATE_HULL_2:
+        case STATE_DONE :
             canvas_clear();
             ui_button_step_alpha( "0.0" );
             find_convex();
@@ -638,7 +636,6 @@ D( "State: %d", giState );
             break;
 
 //        case STATE_RESTART:
-        case STATE_DONE:
         default: // Init
             init();
             break;
@@ -669,7 +666,7 @@ D( "Step: %d/%d", step, n-1 );
             draw_points();
         }
     }
-    if( giState === STATE_HULL_1 )
+    if( giState === STATE_HULL )
     {
         var n = gaVertex.length;
 
@@ -702,7 +699,7 @@ D( "Hull: %d/%d", step, n-1 );
 
 function OnClickDebugPrevVert()
 {
-    if( giState == STATE_HULL_1 )
+    if( giState == STATE_HULL )
         OnClickStep( false );
 
     var n = gaVertex.length - 1;
@@ -721,7 +718,7 @@ function OnClickDebugPrevVert()
 
 function OnClickDebugNextVert()
 {
-    if( giState == STATE_HULL_1 )
+    if( giState == STATE_HULL )
         OnClickStep( false );
 
     var n = gaVertex.length - 1;
@@ -787,7 +784,7 @@ function ui_text_set_label()
     if( giState == STATE_POINT )
         text += step + " / " + (gaVertex.length - 1);
     else
-    if( giState == STATE_HULL_1 )
+    if( giState == STATE_HULL )
         text += step + " / " + (gaVertex.length - 1);
 
     var p           = document.getElementById("pointsText" );
