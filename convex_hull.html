@@ -171,6 +171,11 @@ https://github.com/Michaelangel007/convex_hull_js
             UxV= 1*0-1*1   = -1
             -1 < 0 === CW
         NOTE: Assumes the origin is in top left!
+        If you want to set the Javascript origin to the bottom right like OpenGL:
+            var canvas  = document.getElementById("canvas");
+            var context = canvas.getContext("2d");
+            context.translate(0, canvas.height);
+            context.scale(1, -1);
     */
     function IsWindingClockwise2( p1, p2, p3 )
     {
