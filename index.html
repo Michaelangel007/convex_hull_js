@@ -183,6 +183,21 @@ https://github.com/Michaelangel007/convex_hull_js
         return (z > 0); // Origin bottom left (RHCS) +Z into   screen
     }
 
+    /**
+        @param {Number} i - index into vertex array
+        @param {Number} j - index into vertex array
+        @param {Number} k - index into vertex array
+        @return {Boolean} Returns true if Clockwise, false if Counter-Clockwise
+    */
+    function IsTriWindingClockwise2( i, j, k )
+    {
+        return IsWindingClockwise2(
+            gaVertex[ i ],
+            gaVertex[ j ],
+            gaVertex[ k ]
+        );
+    }
+
 // === Utility ===
 
 function canvas_clear()
@@ -973,8 +988,8 @@ function tests()
         1, 1, // A v0
         4, 1, // B v1
         1, 4, // D v2
-        4, 4  // C v3
-        2, 2, // E v4
+        4, 4, // C v3
+        2, 2  // E v4
     ];
 
 
@@ -1042,11 +1057,7 @@ D( "Initalize ..." );
     init();
 
 
-    var isCW = IsTriWindingClockwise( 2, 3, 6 );
-        gaVertex[ 2 ],
-        gaVertex[ 3 ],
-        gaVertex[ 6 ]
-    );
+    var isCW = IsTriWindingClockwise2( 2, 3, 6 );
     console.log( "[ 2, 3, 6 ].winding CW: " + (isCW|0) );
 
 
