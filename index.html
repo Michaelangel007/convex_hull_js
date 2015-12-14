@@ -19,7 +19,7 @@ https://github.com/Michaelangel007/convex_hull_js
     var giDebugVert = 0;
 
     var canvas, context, cw, ch;
-    var gaPointsXY = // Raw x,y points
+    var gaPointsXY = // Raw x,y points NOTE: Origin top-left !
     [
         201, 129,
         380, 133,
@@ -459,7 +459,7 @@ function draw_minmax()
 // Enlarge the convex hull if necessary
 function add_convex( i )
 {
-    var p, n = gaVertex.length,len = convexIndex.length, v, isCW, isInside, t;
+    var p, n = gaVertex.length, len = convexIndex.length, v, isCW, isInside, t;
 
 D( "Vertices dones: %d,  UnknownVertsLeft:", i, unknownIndex.toString(16) );
 
@@ -504,23 +504,41 @@ D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
                 else
                 if( nDistance0 < nDistance2 ) { iClosest2  = j; nDistance2 = nDistance0; }
             }
-
-            j = len - 2;
+// p = 5
+// [2,3,6]
+// insert inbetween 2 & w
+//            j = len - 2;
 
             // Verify we have a consistant winding order
             // of the last 2 convex hull verts plus the new one
+            j = iClosest1;
+            var u = convexIndex[ (j + 0)       ];
+            var v = convexIndex[ (j + 1) % len ];
 
             isCW = IsWindingClockwise2(
-                convexIndex[ j + 0 ],
-                convexIndex[ j + 1 ],
+                gaVertex[ u ],
+                gaVertex[ v ],
                 p
             );
+
+            if( !isCW )
+{
+            j = iClosest2;
+            var u = convexIndex[ (j + 0)       ];
+            var v = convexIndex[ (j + 1) % len ];
+
+            isCW = IsWindingClockwise2(
+                gaVertex[ u ],
+                gaVertex[ v ],
+                p
+            );
+}
 
             if( isCW )
             {
                 // insert new vertex before last vertex
-                convexIndex.splice( len-1, 0, i );
-                convexVerts.splice( len-1, 0, p );
+                convexIndex.splice( j+1, 0, i ); // len-1
+                convexVerts.splice( j+1, 0, p ); // len-1
             }
             else
             {
