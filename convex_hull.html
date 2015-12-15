@@ -482,7 +482,7 @@ function draw_minmax()
 // Enlarge the convex hull if necessary
 function add_convex( i )
 {
-    var p, n = gaVertex.length, len = convexIndex.length, v, isCW, isInside, t;
+    var p, n = gaVertex.length, len = convexIndex.length, v, insertAt, isInside, t;
 
 D( "Vertices dones: %d,  UnknownVertsLeft:", i, unknownIndex.toString(16) );
 
@@ -544,6 +544,8 @@ D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
 //   [u,i,v,w] = [2, 9, 5, 3]
 //   Old ConvexHull = [6,0,2,5,3]
 //   New ConvexHull = [6,0,2,5,3,9]
+// p = #11
+//   Old ConvexHull = [6, 0, 2, 5, 3, 10, 9];
 
             // We need to either insert P into the convex hull either
             // - before BestVert
@@ -560,8 +562,7 @@ D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
             if( isCW1 && isCW2 ) // Try After V: [u,v,i,w]
             {
                 // insert new vertex after closest vertex
-                convexIndex.splice( iBestVert+1, 0, i );
-                convexVerts.splice( iBestVert+1, 0, p );
+                insertAt = iBestVert + 1;
             }
             else // Before V: [u,i,v,w]
             {
@@ -571,8 +572,7 @@ D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
 
                 if( isCW3 && isCW4 )
                 {
-                    convexIndex.splice( iBestVert, 0, i );
-                    convexVerts.splice( iBestVert, 0, p );
+                    insertAt = iBestVert;
                 }
                 else
                 {
@@ -584,18 +584,26 @@ D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
                     switch( c )
                     {
                         case 6:
-                            convexIndex.splice( iBestVert, 0, i );
-                            convexVerts.splice( iBestVert, 0, p );
+                            insertAt = iBestVert;
                             break;
                         case 9:
-                            convexIndex.splice( iBestVert+2, 0, i );
-                            convexVerts.splice( iBestVert+2, 0, p );
+                            insertAt = iBestVert + 2;
                             break;
                         default:
                             console.log( "ERROR: ConvexHull CW order compromised: Unhandled edge case: %d !", c );
                             break;
                     }
                 }
+            }
+
+            // Now test if vertex on either side can be removed
+            // That is, use a new temp set of points with
+            // - vertex (B)efore removed and test if B is inside the new polygon
+            // - vertex (A)fter  removed and test if A is inside the new polygon
+            if( insertAt !== undefined )
+            {
+                convexIndex.splice( insertAt, 0, i );
+                convexVerts.splice( insertAt, 0, p );
             }
         }
     }
