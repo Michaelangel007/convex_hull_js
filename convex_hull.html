@@ -737,7 +737,22 @@ function find_convex()
             if( !isInside )
             {
                 insertAt  = undefined;
-                iBestVert = 0;
+
+                var iBestVert = 0;
+                var nBestDist = vec2_distSquared( p, convexVerts[ iBestVert ] ); // distance from point p to current convex hull vertex
+                var nDistance;
+
+                // We should be finding the closest min/max points
+                // TODO: Find the nearest 2 convex hull vertices as we need to insert the new point inbetween them
+                for( var j = 1; j < len; ++j )
+                {
+                    /**/nDistance = vec2_distSquared( p, convexVerts[ j ] );
+                    if( nDistance < nBestDist )
+                    {
+                        iBestVert = j;
+                        nBestDist = nDistance;
+                    }
+                }
 
                 var u = convexIndex[ (iBestVert + (len-1)) % len ];
                 var v = convexIndex[  iBestVert                  ];
