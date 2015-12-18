@@ -447,16 +447,20 @@ function find_minmax()
     // ======================================================================
 function hint_convex()
 {
-    D( "Potential Convex Hull Indices: " + minImaxI );
+D( "Potential Convex Hull Indices: " + minImaxI );
 
-    var i, j, k;
-    var nVertices = gaVertex.length;
+    var h, i, j, k;
+    var n = gaVertex.length;
+    var insertAt, isInside, p;
 
     // We have either 3 or 4 points
     // We need to make sure the winding order is consistent
     // If we were only given 3 points we won't have 4 unique points; one will be a duplicate
     // Therefore we generate an array with only unique indices
     // http://stackoverflow.com/questions/9229645/remove-duplicates-from-javascript-array
+
+    // From here on we know we have at least 4 vertices,
+    // but we still may have only 3 vertices in the convex hull
     var aUniq = minImaxI.reduce(
         function( elemA, elemB )
         {
@@ -530,14 +534,54 @@ D( "Initial Convex Hull Indices: " + convexIndex );
     // Hint: use Uint32Array
     // https://www.khronos.org/registry/typedarray/specs/latest/#7
     //
-    if( nVertices > 31 )
+    if( n > 31 )
         console.log( "ERROR: More then 31 vertices in the convex hull -- ignoring remainig vertices!" );
 
-    unknownIndex  =  (1 << nVertices) - 1; // All vertices are unknown
-    unknownIndex &= ~(1 << aUniq[0]);     // Don't need to re-test
-    unknownIndex &= ~(1 << aUniq[1]);     // the min/max vertices
-    unknownIndex &= ~(1 << aUniq[2]);     // since we know they are included in the convex hull (at least initially)
+    // Keep track of which vertices have been classified
+    unknownIndex  =  (1 << n) - 1; // All vertices are unknown
+    unknownIndex &= ~(1 << i);     // Don't need to re-test
+    unknownIndex &= ~(1 << j);     // the min/max vertices
+    unknownIndex &= ~(1 << k);     // since we know they are included in the convex hull (at least initially)
 
+    // 4th min/max vertex may be inside the convex hull
+    // If not then we add it preserving the winding order
+    if( aUniq.length > 3 )
+    {
+        h        = aUniq[ 3 ];
+        p        = gaVertex[ h ];
+        isInside = IsPointInPoly( p, convexVerts );
+
+        if( !isInside )
+        {
+            // TODO: Preserve the winding order
+            insertAt = undefined;
+
+            isCW = IsWindingClockwise2(
+                gaVertex[ j ],
+                gaVertex[ k ],
+                gaVertex[ h ]
+            );
+            if( isCW )
+                insertAt = convexIndex.length; // .push() at end
+            else
+            {
+                isCW = IsWindingClockwise2(
+                    gaVertex[ h ],
+                    gaVertex[ i ],
+                    gaVertex[ j ]
+                );
+                if( isCW )
+                    insertAt = 0;
+            }
+
+            if( insertAt !== undefined )
+            {
+                convexIndex.splice( insertAt, 0, h );
+                convexVerts.splice( insertAt, 0, p );
+                unknownIndex &= ~(1 << h);
+            }
+        }
+    }
 }
 
 function dump_convex()
@@ -690,95 +734,7 @@ function find_convex()
     }
 
     find_minmax();
-
-    // From here on we know we have at least 4 vertices,
-    // but we still may have only 3 vertices in the convex hull
-    var aUniq = minImaxI.reduce(
-        function( elemA, elemB )
-        {
-            if( elemA.indexOf( elemB ) < 0 )
-                elemA.push   ( elemB );
-            return elemA;
-        }, []
-    );
-
-    var isCW = IsWindingClockwise2(
-        gaVertex[ aUniq[0] ],
-        gaVertex[ aUniq[1] ],
-        gaVertex[ aUniq[2] ]
-    );
-
-    if( !isCW )
-    {
-        // swap order of vertex #2 and #3 so it is CW
-        var temp = aUniq[1];
-        /*      */ aUniq[1]  = aUniq[2];
-        /*                  */ aUniq[2] = temp;
-    }
-
-    // The (winding) order IS important
-    i = aUniq[ 0 ];
-    j = aUniq[ 1 ];
-    k = aUniq[ 2 ];
-
-    convexIndex.push( i );
-    convexIndex.push( j );
-    convexIndex.push( k );
-
-    // Mirror structure -- needed to test point in polygon
-    convexVerts.push( gaVertex[ i ] );
-    convexVerts.push( gaVertex[ j ] );
-    convexVerts.push( gaVertex[ k ] );
-
-    // Keep track of which vertices have been classified
-    unknownIndex  =  (1 << n) - 1; // All vertices are unknown
-    unknownIndex &= ~(1 << i);     // Don't need to re-test
-    unknownIndex &= ~(1 << j);     // the min/max vertices
-    unknownIndex &= ~(1 << k);     // since we know they are included in the convex hull (at least initially)
-
-    // 4th min/max vertex may be inside the convex hull
-    // If not then we add it preserving the winding order
-    if( aUniq.length > 3 )
-    {
-        h        = aUniq[ 3 ];
-        p        = gaVertex[ i ];
-        isInside = IsPointInPoly( p, convexVerts );
-
-        if( !isInside )
-        {
-            // TODO: Preserve the winding order
-            insertAt = undefined;
-
-            isCW = IsWindingClockwise2(
-                gaVertex[ j ],
-                gaVertex[ k ],
-                gaVertex[ h ]
-            );
-            if( isCW )
-            {
-                insertAt = convexIndex.length; // .push() at end
-            }
-            else
-            {
-                isCW = IsWindingClockwise2(
-                    gaVertex[ h ],
-                    gaVertex[ i ],
-                    gaVertex[ j ]
-                );
-                if( isCW )
-                {
-                    insertAt = 0;
-                }
-            }
-
-            if( insertAt !== undefined )
-            {
-                convexIndex.splice( insertAt, 0, h );
-                convexVerts.splice( insertAt, 0, p );
-                unknownIndex &= ~(1 << h);
-            }
-        }
-    }
+    hint_convex();
 
     // TODO: 4+ vertices
     var len  = convexIndex.length
