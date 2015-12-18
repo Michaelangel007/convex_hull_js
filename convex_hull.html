@@ -719,22 +719,45 @@ function find_convex()
 
     // TODO: 4+ vertices
     var len  = convexIndex.length
-    var mask = 1, p, isInside, insertAt, iBestVert;
+    var mask, p, isInside, insertAt, iBestVert;
     i = 0;
 
-    while( unknownIndex )
+    // Culling Pass
+    // Remove all vertices that are inside the current convex hull
+D( "ConvexHull: Pre-cull mask: " + unknownIndex.toString( 16 ) );
+
+    for( mask = 1, i = 0; i < n; i++ )
     {
-        // Only process vertices we don't know about
         if( unknownIndex & mask )
         {
             p        = gaVertex[ i ];
             isInside = IsPointInPoly( p, convexVerts );
 
-    D( "ConvexHull: point [#%d/%d] inside? ", i, n-1, (isInside|0) );
+            if( isInside )
+            {
+                unknownIndex &= ~mask;
+            }
+        }
+        mask <<= 1;
+    }
+
+    // Now process the vertices we know are outside
+    // And expand the convex hull as necessary
+D( "ConvexHull: Post-cull mask: " + unknownIndex.toString( 16 ) );
+
+    for( mask = 1, i = 0; i < n; ++i )
+    {
+        // Only process vertices we don't know about
+        if( unknownIndex & mask )
+        {
+            p        = gaVertex[ i ];
+            //isInside = IsPointInPoly( p, convexVerts );
+
+D( "ConvexHull: point [#%d/%d] inside? ", i, n-1, (isInside|0) );
 
             // If the current point is inside the convex hull skip it
             // Else we need to add it to the convex hull
-            if( !isInside )
+            //if( !isInside )
             {
                 insertAt  = undefined;
 
@@ -788,12 +811,10 @@ D( "Convex Hull: Vertex Code: %d", c );
                 }
                 len = convexIndex.length;
             }
-
-            unknownIndex &= ~mask;
         }
 
+        unknownIndex &= ~mask;
         mask <<= 1;
-        ++i;
 
 //        if( i >= n-1 )
 //           break;
