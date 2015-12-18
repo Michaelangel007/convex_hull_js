@@ -835,6 +835,7 @@ D( "State: %d", giState );
         case STATE_DONE :
             canvas_clear();
             ui_button_step_alpha( "0.0" );
+            draw_tris  ( gaVertex.length, "#DDD" );
             find_convex();
             draw_convex();
             draw_minmax();
