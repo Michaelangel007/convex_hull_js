@@ -733,7 +733,7 @@ D( "ConvexHull: Pre-cull mask: " + unknownIndex.toString( 16 ) );
             p        = gaVertex[ i ];
             isInside = IsPointInPoly( p, convexVerts );
 
-D( "ConvexHull: point [#%d/%d] inside? ", i, n-1, (isInside|0) );
+D( "ConvexHull: Cull? point [#%d/%d] inside: ", i, n-1, (isInside|0) );
 
             if( isInside )
                 unknownIndex &= ~mask;
@@ -747,12 +747,10 @@ D( "ConvexHull: Post-cull mask: " + unknownIndex.toString( 16 ) );
 
     for( mask = 1, i = 0; i < n; ++i )
     {
-        // Only process vertices that are outside
-        // Add them to the convex hull
         if( unknownIndex & mask )
         {
-            p        = gaVertex[ i ];
-
+            // Expand sub-phase
+            p         = gaVertex[ i ];
             insertAt  = undefined;
 
             var iBestVert = 0;
@@ -804,6 +802,10 @@ D( "Convex Hull: Vertex Code: %d", c );
                 convexVerts.splice( insertAt, 0, p );
             }
             len = convexIndex.length;
+
+            // Prune phase
+            // Whenever we expand the convex hull we may have 1+ convex hull vertices
+            // that are now inside the convex hull
         }
 
         unknownIndex &= ~mask;
