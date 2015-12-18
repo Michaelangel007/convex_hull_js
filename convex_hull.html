@@ -377,32 +377,35 @@ https://github.com/Michaelangel007/convex_hull_js
     // ======================================================================
     function draw_minmax()
     {
+        var colorR = "#844";
+        var colorG = "#484";
+
         // draw minX - vert
             context.beginPath();
                 context.moveTo( minXYmaxXY[0],  0 );
                 context.lineTo( minXYmaxXY[0], ch );
-            context.strokeStyle = "#484";
+            context.strokeStyle = colorG;
             context.stroke();
 
         // draw minY - horz
             context.beginPath();
                 context.moveTo(  0, minXYmaxXY[1] );
                 context.lineTo( cw, minXYmaxXY[1] );
-            context.strokeStyle = "#844";
+            context.strokeStyle = colorR;
             context.stroke();
 
         // draw maxX - vert
             context.beginPath();
                 context.moveTo( minXYmaxXY[2],  0 );
                 context.lineTo( minXYmaxXY[2], ch );
-            context.strokeStyle = "#484";
+            context.strokeStyle = colorG;
             context.stroke();
 
         // draw maxY - horz
             context.beginPath();
                 context.moveTo(  0, minXYmaxXY[3] );
                 context.lineTo( cw, minXYmaxXY[3] );
-            context.strokeStyle = "#844";
+            context.strokeStyle = colorR;
             context.stroke();
     }
 
