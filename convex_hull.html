@@ -383,6 +383,11 @@ D( "Initial Convex Hull Indices: " + convexIndex );
 
 
     // We only need to track vertices that are NOT in the convexIndex list.
+    //
+    // We could naively just iterate through every vertex and skip the vertices
+    // we already know to be in the convex hull but this has horrible
+    // performance: O(n^2).
+    //
     // First we default to classify all vertices as unknown.
     // Next we remove vertex indices where we know their status (inside/outside)
     //
@@ -398,6 +403,7 @@ D( "Initial Convex Hull Indices: " + convexIndex );
     // This is left as an excercise for the reader. :-)
     // Hint: use Uint32Array
     // https://www.khronos.org/registry/typedarray/specs/latest/#7
+    //
     if( nVertices > 31 )
         console.log( "ERROR: More then 31 vertices in the convex hull -- ignoring remainig vertices!" );
 
