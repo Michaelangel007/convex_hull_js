@@ -641,36 +641,6 @@ D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
                     nBestDist = nDistance;
                 }
             }
-// p = #0          viw u :   uvIw OR  uIvw
-//   Math.sqrt( ((gaVertex[0].x-gaVertex[6].x)*(gaVertex[0].x-gaVertex[6].x)) + ((gaVertex[0].y-gaVertex[6].y)*(gaVertex[0].y-gaVertex[6].y)) );
-//   = 231.69160537231383
-//   Math.sqrt( ((gaVertex[0].x-gaVertex[2].x)*(gaVertex[0].x-gaVertex[2].x)) + ((gaVertex[0].y-gaVertex[2].y)*(gaVertex[0].y-gaVertex[2].y)) );
-//   = 337.78395462188547
-//   Old ConvexHull = [6,2,3]
-//   New ConvexHull = [6,0,2,3]
-// p = #5          w   uiv
-//     v6 = < 101, 338 ] // [ gaVertex[6].x, gaVertex[6].y ]
-//     v0 = < 201, 129 ] // [ gaVertex[0].x, gaVertex[0].y ]
-//     v2 = < 538, 106 > // [ gaVertex[2].x, gaVertex[2].y ]
-//     v3 = < 966, 194 > // [ gaVertex[3].x, gaVertex[3].y ]
-//   Math.sqrt( ((gaVertex[5].x-gaVertex[2].x)*(gaVertex[5].x-gaVertex[2].x)) + ((gaVertex[5].y-gaVertex[2].y)*(gaVertex[5].y-gaVertex[2].y)) );
-//   = 252.7152547829276
-//   Math.sqrt( ((gaVertex[5].x-gaVertex[3].x)*(gaVertex[5].x-gaVertex[3].x)) + ((gaVertex[5].y-gaVertex[3].y)*(gaVertex[5].y-gaVertex[3].y)) );
-//   = 189.04232330353963
-//     iClosest1 = 3 --> convexIndex[3] = v3
-//     iClosest2 = 2 --> convexIndex[2] = v2
-//   Old ConvexHull = [6,0,2,3]
-//   New ConvexHull = [6,0,2,5,3]
-//   Insert inbetween i2, i3 --> Vertex[2] Vertex[3]
-// p = #9
-//   Closest = 3 --> v5
-//   [u,v,i,w] = [2, 5, 9, 3]
-//   [u,i,v,w] = [2, 9, 5, 3]
-//   Old ConvexHull = [6,0,2,5,3]
-//   New ConvexHull = [6,0,2,5,3,9]
-// p = #11
-//   Old ConvexHull = [6, 0, 2, 5, 3, 10, 9];
-
             // We need to either insert P into the convex hull either
             // - before BestVert
             // - after  BestVert
