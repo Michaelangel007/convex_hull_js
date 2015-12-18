@@ -290,8 +290,11 @@ function draw_tris( maxpoints, forcecolor )
 
 function find_minmax()
 {
+    var n = gaVertex.length;
+    if( n < 3 ) // Need at least 3 vertex points!
+        return;
+
     var i, j, k;
-    var n     = gaVertex.length;
     var vMinX = gaVertex[ 0 ].x, iMinX = 0;
     var vMaxX = gaVertex[ 0 ].x, iMaxX = 0;
     var vMinY = gaVertex[ 0 ].y, iMinY = 0;
@@ -300,9 +303,6 @@ function find_minmax()
 
     minXYmaxXY = [];
     minImaxI   = [];
-
-    if( n < 3 ) // Need at least 3 vertex points!
-        return;
 
     for( i = 1; i < n; ++i ) // Vertex[0] is both min & max until we inspect remainin vertices
     {
