@@ -684,6 +684,8 @@ function find_convex()
         if( !isInside )
         {
             // TODO: Preserve the winding order
+            insertAt = undefined;
+
             isCW = IsWindingClockwise2(
                 gaVertex[ j ],
                 gaVertex[ k ],
@@ -691,9 +693,7 @@ function find_convex()
             );
             if( isCW )
             {
-                convexIndex.push( h );
-                convexVerts.push( gaVertex[ h ] );
-                unknownIndex &= (1 << h);
+                insertAt = convexIndex.length; // .push() at end
             }
             else
             {
@@ -704,11 +704,15 @@ function find_convex()
                 );
                 if( isCW )
                 {
-                    var insertAt = 0;
-                    convexIndex.splice( insertAt, 0, i );
-                    convexVerts.splice( insertAt, 0, p );
-                    unknownIndex &= (1 << h);
+                    insertAt = 0;
                 }
+            }
+
+            if( insertAt !== undefined )
+            {
+                convexIndex.splice( insertAt, 0, h );
+                convexVerts.splice( insertAt, 0, p );
+                unknownIndex &= ~(1 << h);
             }
         }
     }
@@ -754,7 +758,7 @@ D( "Convex Hull: Vertex Code: %d", c );
                 {
                     case  3: insertAt = iBestVert + 1; break; // Try After V: [u,v,i,w]
                     case  6: insertAt = iBestVert    ; break;
-                    case  8: insertAt = iBestVert    ; break; // ??? correct?
+                  //case  8: insertAt = iBestVert    ; break; // ??? correct?
                     case  9: insertAt = iBestVert + 2; break;
                     case 12: insertAt = iBestVert    ; break; // Before V: [u,i,v,w]
                     default:
