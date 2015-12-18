@@ -317,8 +317,15 @@ function find_minmax()
 
     minXYmaxXY = [ vMinX, vMinY, vMaxX, vMaxY ];
     minImaxI   = [ iMinX, iMinY, iMaxX, iMaxY ];
+}
 
-D( "Potential Convex Hull Indices: " + minImaxI );
+
+function hint_convex()
+{
+    D( "Potential Convex Hull Indices: " + minImaxI );
+
+    var i, j, k;
+    var nVertices = gaVertex.length;
 
     // We have either 3 or 4 points
     // We need to make sure the winding order is consistent
@@ -390,10 +397,10 @@ D( "Initial Convex Hull Indices: " + convexIndex );
     // This is left as an excercise for the reader. :-)
     // Hint: use Uint32Array
     // https://www.khronos.org/registry/typedarray/specs/latest/#7
-    if( n > 31 )
+    if( nVertices > 31 )
         console.log( "ERROR: More then 31 vertices in the convex hull -- ignoring remainig vertices!" );
 
-    unknownIndex  =  (1 <<        n) - 1; // All vertices are unknown
+    unknownIndex  =  (1 << nVertices) - 1; // All vertices are unknown
     unknownIndex &= ~(1 << aUniq[0]);     // Don't need to re-test
     unknownIndex &= ~(1 << aUniq[1]);     // the min/max vertices
     unknownIndex &= ~(1 << aUniq[2]);     // since we know they are included in the convex hull (at least initially)
@@ -595,7 +602,7 @@ D( "Convex Hull Vertex Code: %d", c );
 
 function find_convex()
 {
-    var n = gaVertex.length, len = convexIndex.length;
+    var n = gaVertex.length;
     var h, i, j, k;
 
     convexIndex = [];
@@ -606,10 +613,13 @@ function find_convex()
     else
     if( n == 3 )
     {
+        // We don't care about winding order -- user will if they need to
         convexIndex = [ 0, 1, 2 ];
         convexVerts = [ gaVertex[0], gaVertex[1], gaVertex[2] ];
         return;
     }
+
+    find_minmax();
 
     // From here on we have at least 4 vertices,
     // but we still may have only 3 vertices in the convex hull
@@ -655,18 +665,25 @@ function find_convex()
     unknownIndex &= ~(1 << aUniq[1]);     // the min/max vertices
     unknownIndex &= ~(1 << aUniq[2]);     // since we know they are included in the convex hull (at least initially)
 
-    // 4th vertex may be inside the convex hull
+    // 4th min/max vertex may be inside the convex hull
+    // If not then we add it preserving the winding order
     if( aUniq.length > 3 )
     {
-        h = aUniq[ 3 ];
+        h        = aUniq[ 3 ];
+        p        = gaVertex[ i ];
+// [15, 12, 14, 11, 13, 6, 0, 2, 5, 3, 18, 17, 10, 19, 16, 9]
+        isInside = IsPointInPoly( p, convexVerts );
 
-        // TODO: Preserve the winding order
-        //convexIndex.push( h );
-        //convexVerts.push( gaVertex[ h ] );
+        if( !isInside )
+        {
+            // TODO: Preserve the winding order
+            //convexIndex.push( h );
+            //convexVerts.push( gaVertex[ h ] );
+        }
     }
 
     // TODO: 4+ vertices
-
+    var len  = convexIndex.length
     var mask = 1, p, isInside, insertAt, iBestVert;
     i = 0;
 
@@ -774,14 +791,13 @@ D( "State: %d", giState );
             draw_tris  ();
             draw_points();
             find_minmax();
+            hint_convex();
             draw_minmax();
             break;
 
         case STATE_HULL :
             giStep = 0; // assume we have zero vertices processed/added to convex hull
-
             ui_button_step_alpha( "1.0" );
-
             OnClickStep( false );
             break;
 
@@ -1220,6 +1236,7 @@ D( "Initalize ..." );
 //    draw_tris  ();
 //    draw_points();
 //    find_minmax();
+//    hint_convex();
 //    draw_minmax();
 //    find_convex();
 //    draw_convex();
