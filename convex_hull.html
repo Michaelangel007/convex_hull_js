@@ -628,7 +628,7 @@ function find_convex()
 
     find_minmax();
 
-    // From here on we have at least 4 vertices,
+    // From here on we know we have at least 4 vertices,
     // but we still may have only 3 vertices in the convex hull
     var aUniq = minImaxI.reduce(
         function( elemA, elemB )
@@ -667,10 +667,10 @@ function find_convex()
     convexVerts.push( gaVertex[ k ] );
 
     // Keep track of which vertices have been classified
-    unknownIndex  =  (1 <<        n) - 1; // All vertices are unknown
-    unknownIndex &= ~(1 << aUniq[0]);     // Don't need to re-test
-    unknownIndex &= ~(1 << aUniq[1]);     // the min/max vertices
-    unknownIndex &= ~(1 << aUniq[2]);     // since we know they are included in the convex hull (at least initially)
+    unknownIndex  =  (1 << n) - 1; // All vertices are unknown
+    unknownIndex &= ~(1 << i);     // Don't need to re-test
+    unknownIndex &= ~(1 << j);     // the min/max vertices
+    unknownIndex &= ~(1 << k);     // since we know they are included in the convex hull (at least initially)
 
     // 4th min/max vertex may be inside the convex hull
     // If not then we add it preserving the winding order
@@ -678,14 +678,38 @@ function find_convex()
     {
         h        = aUniq[ 3 ];
         p        = gaVertex[ i ];
-// [15, 12, 14, 11, 13, 6, 0, 2, 5, 3, 18, 17, 10, 19, 16, 9]
         isInside = IsPointInPoly( p, convexVerts );
 
+// [15, 12, 14, 11, 13, 6, 0, 2, 5, 3, 18, 17, 10, 19, 16, 9]
         if( !isInside )
         {
             // TODO: Preserve the winding order
-            //convexIndex.push( h );
-            //convexVerts.push( gaVertex[ h ] );
+            isCW = IsWindingClockwise2(
+                gaVertex[ j ],
+                gaVertex[ k ],
+                gaVertex[ h ]
+            );
+            if( isCW )
+            {
+                convexIndex.push( h );
+                convexVerts.push( gaVertex[ h ] );
+                unknownIndex &= (1 << h);
+            }
+            else
+            {
+                isCW = IsWindingClockwise2(
+                    gaVertex[ h ],
+                    gaVertex[ i ],
+                    gaVertex[ j ]
+                );
+                if( isCW )
+                {
+                    var insertAt = 0;
+                    convexIndex.splice( insertAt, 0, i );
+                    convexVerts.splice( insertAt, 0, p );
+                    unknownIndex &= (1 << h);
+                }
+            }
         }
     }
 
