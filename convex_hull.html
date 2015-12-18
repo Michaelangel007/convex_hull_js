@@ -482,12 +482,14 @@ D( "Potential Convex Hull is CW..: " + (isCW|0) );
         /*                  */ aUniq[2] = temp;
     }
 
+/*
     isCW = IsWindingClockwise2(
         gaVertex[ aUniq[0] ],
         gaVertex[ aUniq[1] ],
         gaVertex[ aUniq[2] ]
     );
 D( "Verify Convex Hull is now CW : " + (isCW|0) );
+*/
 
     // The (winding) order IS important
     i = aUniq[ 0 ];
@@ -536,7 +538,13 @@ D( "Initial Convex Hull Indices: " + convexIndex );
     unknownIndex &= ~(1 << aUniq[1]);     // the min/max vertices
     unknownIndex &= ~(1 << aUniq[2]);     // since we know they are included in the convex hull (at least initially)
 
+}
+
+function dump_convex()
+{
 D( "Partial Convex Hull Indices: " + convexIndex );
+
+    var i;
 
     for( i = 0; i < convexIndex.length; ++i )
     {
@@ -708,6 +716,7 @@ function find_convex()
         /*                  */ aUniq[2] = temp;
     }
 
+    // The (winding) order IS important
     i = aUniq[ 0 ];
     j = aUniq[ 1 ];
     k = aUniq[ 2 ];
