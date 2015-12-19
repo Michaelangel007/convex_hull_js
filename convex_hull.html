@@ -293,6 +293,17 @@ https://github.com/Michaelangel007/convex_hull_js
 
 
     // ======================================================================
+    function draw_vertex( i, color )
+    {
+        if( color === undefined )
+            color = "#0F0"; // green
+
+        var p = gaVertex[ i ];
+        draw_point( p.x, p.y, "#0F0", 7 );
+    }
+
+
+    // ======================================================================
     function draw_tris( maxpoints, forcecolor )
     {
         var color,c = colors.length;
@@ -818,9 +829,13 @@ D( "FIND Convex Hull: Vertex Code: %d", c );
             }
         }
 
+// DEBUG
 canvas_clear();
 draw_tris  ( gaVertex.length, "#DDD" );
 draw_convex();
+if( (i+1) < n )
+draw_vertex( i+1 );
+//DEBUG
 
         unknownIndex &= ~mask;
         mask <<= 1;
@@ -954,8 +969,7 @@ D( "Hull: %d/%d", giStep, n-1 );
         }
         else
         {
-            var p = gaVertex[ giStep ];
-            draw_point( p.x, p.y, "#0F0", 7 );
+            draw_vertex( giStep );
             ui_text_set_label();
         }
     }
