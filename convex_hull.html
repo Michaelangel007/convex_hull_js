@@ -724,8 +724,7 @@ function find_convex()
     var n = gaVertex.length;
     var h, i, j, k;
 
-    convexIndex = [];
-    convexVerts = [];
+    init_convex();
 
     if( n < 3 )
         return; // no solution
