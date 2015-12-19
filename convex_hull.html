@@ -767,7 +767,7 @@ function find_convex()
             isInside = IsPointInPoly( p, convexVerts );
             insertAt = undefined;
 
-D( "FIND [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
+D( "FIND [#%d/%d] is now inside?: ", i, n-1, (isInside|0) );
 
         if( !isInside )
         {
@@ -803,7 +803,7 @@ D( "FIND [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
                     | (isCW3|0) << 2
                     | (isCW2|0) << 1
                     | (isCW1|0) << 0;
-D( "FIND Convex Hull: Vertex Code: %d", c );
+D( "     Convex Hull: Vertex Code: %d", c );
 
                 switch( c )
                 {
