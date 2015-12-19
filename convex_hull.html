@@ -424,7 +424,7 @@ https://github.com/Michaelangel007/convex_hull_js
 // __ Implementation __
 
 
-    // ======================================================================
+// ======================================================================
 function find_minmax()
 {
     var n = gaVertex.length;
@@ -458,7 +458,7 @@ function find_minmax()
 
 
 // Use the min/max vertices as a starting point for the convex hull
-    // ======================================================================
+// ======================================================================
 function hint_convex()
 {
 D( "Potential Convex Hull Indices: " + minImaxI );
@@ -599,6 +599,9 @@ D( "Pre Convex Hull Indices: " + convexIndex );
     }
 }
 
+
+// Enlarge the convex hull if necessary
+// ======================================================================
 function dump_convex()
 {
 D( "Partial Convex Hull Indices: " + convexIndex );
@@ -616,7 +619,7 @@ D( "#%d: [%d] %d,%d", i, convexIndex[i], x, y );
 
 
 // Enlarge the convex hull if necessary
-    // ======================================================================
+// ======================================================================
 function add_convex( i )
 {
     var p, n = gaVertex.length, len = convexIndex.length, v, insertAt, isInside, t;
@@ -701,7 +704,7 @@ D( "ADD  Convex Hull Vertex Code: %d", c );
 }
 
 
-    // ======================================================================
+// ======================================================================
 function cull_convex()
 {
 D( "ConvexHull: Pre-cull mask: " + unknownIndex.toString( 16 ) );
@@ -731,7 +734,7 @@ D( "ConvexHull: Post-cull mask: " + unknownIndex.toString( 16 ) );
 }
 
 
-    // ======================================================================
+// ======================================================================
 function find_convex()
 {
     var n = gaVertex.length;
@@ -844,7 +847,7 @@ draw_vertex( i+1 );
 }
 
 
-    // ======================================================================
+// ======================================================================
 function init_convex()
 {
     convexIndex = [];
@@ -852,7 +855,7 @@ function init_convex()
 }
 
 
-    // ======================================================================
+// ======================================================================
 function init()
 {
     giState = STATE_INIT;
@@ -869,7 +872,7 @@ function init()
 // __ UI __
 
 
-    // ======================================================================
+// ======================================================================
 function OnClickNext()
 {
     ++giState;
@@ -923,7 +926,7 @@ D( "State: %d", giState );
 }
 
 
-    // ======================================================================
+// ======================================================================
 function OnClickStep( updateStep )
 {
     var n = gaVertex.length;
@@ -977,7 +980,7 @@ D( "Hull: %d/%d", giStep, n-1 );
 }
 
 
-    // ======================================================================
+// ======================================================================
 function OnClickDebugPrevVert()
 {
     if( giState == STATE_HULL )
@@ -998,7 +1001,7 @@ function OnClickDebugPrevVert()
 }
 
 
-    // ======================================================================
+// ======================================================================
 function OnClickDebugNextVert()
 {
     if( giState == STATE_HULL )
@@ -1019,7 +1022,7 @@ function OnClickDebugNextVert()
 }
 
 
-    // ======================================================================
+// ======================================================================
 function ui_button_step_alpha( alpha )
 {
     var bs           = document.getElementById("buttonStep" );
@@ -1029,7 +1032,8 @@ function ui_button_step_alpha( alpha )
     p.style.opacity = alpha
 }
 
-    // ======================================================================
+
+// ======================================================================
 function ui_text_set_label()
 {
     var text = gaStatusText[ giState ];
@@ -1046,7 +1050,7 @@ function ui_text_set_label()
 }
 
 
-    // ======================================================================
+// ======================================================================
 function tests()
 {
 // 3 vertices: Combinations = 2 (CW, CCW)
@@ -1288,7 +1292,7 @@ function tests()
 }
 
 
-    // ======================================================================
+// ======================================================================
 function main()
 {
     canvas  = document.getElementById("canvas");
