@@ -638,9 +638,9 @@ D( "Vertices dones: %d,  UnknownVertsLeft:", i, unknownIndex.toString(16) );
         isInside = IsPointInPoly( p, convexVerts );
         insertAt = undefined;
 
-D( "ADD  [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
+D( "ADD  [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside | 0) );
 
-        if( !isInside )
+        if( ! isInside )
         {
             var iBestVert = 0;
             var nBestDist = vec2_distSquared( p, convexVerts[ iBestVert ] ); // distance from point p to current convex hull vertex
@@ -720,7 +720,7 @@ D( "ConvexHull: Pre-cull mask: " + unknownIndex.toString( 16 ) );
             p        = gaVertex[ i ];
             isInside = IsPointInPoly( p, convexVerts );
 
-D( "ConvexHull: Cull? point [#%d/%d] inside: ", i, n-1, (isInside|0) );
+D( "ConvexHull: Cull? point [#%d/%d] inside: ", i, n-1, (isInside | 0) );
 
             if( isInside )
                 unknownIndex &= ~mask;
@@ -771,9 +771,9 @@ function find_convex()
             isInside = IsPointInPoly( p, convexVerts );
             insertAt = undefined;
 
-D( "FIND [#%d/%d] is now inside?: ", i, n-1, (isInside|0) );
+D( "FIND [#%d/%d] is now inside?: ", i, n-1, (isInside | 0) );
 
-        if( !isInside )
+        if( ! isInside )
         {
                 // TODO: Find the nearest 2 convex hull vertices as we need to insert the new point inbetween them
                 var iBestVert = 0;
@@ -834,11 +834,11 @@ D( "     Convex Hull: Vertex Code: %d", c );
         }
 
 // DEBUG
-canvas_clear();
-draw_tris  ( gaVertex.length, "#DDD" );
-draw_convex();
-if( (i+1) < n )
-draw_vertex( i+1 );
+//canvas_clear();
+//draw_tris  ( gaVertex.length, "#DDD" );
+//draw_convex();
+//if( (i+1) < n )
+//draw_vertex( i+1 );
 //DEBUG
 
         unknownIndex &= ~mask;
