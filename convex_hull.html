@@ -623,7 +623,7 @@ D( "Vertices dones: %d,  UnknownVertsLeft:", i, unknownIndex.toString(16) );
         isInside = IsPointInPoly( p, convexVerts );
         insertAt = undefined;
 
-D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
+D( "ADD  [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
 
         if( !isInside )
         {
@@ -751,65 +751,76 @@ function find_convex()
         if( unknownIndex & mask )
         {
             // Expand sub-phase
+            // If the convex hull has changed we need to test the point
             p        = gaVertex[ i ];
+            isInside = IsPointInPoly( p, convexVerts );
             insertAt = undefined;
 
-            // TODO: Find the nearest 2 convex hull vertices as we need to insert the new point inbetween them
-            var iBestVert = 0;
-            var nBestDist = vec2_distSquared( p, convexVerts[ iBestVert ] ); // distance from point p to current convex hull vertex
-            var nDistance;
+D( "FIND [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
 
-            // TODO: Find the nearest 2 convex hull vertices as we need to insert the new point inbetween them
-            // We should be finding the closest min/max points
-            // Actually we should be finding the nearest
-            // outside edge of the convex hull
-            for( var j = 1; j < len; ++j )
-            {
-                /**/nDistance = vec2_distSquared( p, convexVerts[ j ] );
-                if( nDistance < nBestDist )
+        if( !isInside )
+        {
+                // TODO: Find the nearest 2 convex hull vertices as we need to insert the new point inbetween them
+                var iBestVert = 0;
+                var nBestDist = vec2_distSquared( p, convexVerts[ iBestVert ] ); // distance from point p to current convex hull vertex
+                var nDistance;
+
+                // TODO: Find the nearest 2 convex hull vertices as we need to insert the new point inbetween them
+                // We should be finding the closest min/max points
+                // Actually we should be finding the nearest
+                // outside edge of the convex hull
+                for( var j = 1; j < len; ++j )
                 {
-                    iBestVert = j;
-                    nBestDist = nDistance;
+                    /**/nDistance = vec2_distSquared( p, convexVerts[ j ] );
+                    if( nDistance < nBestDist )
+                    {
+                        iBestVert = j;
+                        nBestDist = nDistance;
+                    }
                 }
-            }
 
-            var u = convexIndex[ (iBestVert + (len-1)) % len ];
-            var v = convexIndex[  iBestVert                  ];
-            var w = convexIndex[ (iBestVert +      1)  % len ];
+                var u = convexIndex[ (iBestVert + (len-1)) % len ];
+                var v = convexIndex[  iBestVert                  ];
+                var w = convexIndex[ (iBestVert +      1)  % len ];
 
-            var isCW1 = IsTriWindingClockwise2( u, v, i );
-            var isCW2 = IsTriWindingClockwise2( v, i, w );
-            var isCW3 = IsTriWindingClockwise2( u, i, v );
-            var isCW4 = IsTriWindingClockwise2( i, v, w );
-            var c = 0
-                | (isCW4|0) << 3
-                | (isCW3|0) << 2
-                | (isCW2|0) << 1
-                | (isCW1|0) << 0;
+                var isCW1 = IsTriWindingClockwise2( u, v, i );
+                var isCW2 = IsTriWindingClockwise2( v, i, w );
+                var isCW3 = IsTriWindingClockwise2( u, i, v );
+                var isCW4 = IsTriWindingClockwise2( i, v, w );
+                var c = 0
+                    | (isCW4|0) << 3
+                    | (isCW3|0) << 2
+                    | (isCW2|0) << 1
+                    | (isCW1|0) << 0;
 D( "FIND Convex Hull: Vertex Code: %d", c );
 
-            switch( c )
-            {
-                case  3: insertAt = iBestVert + 1; break; // Try After V: [u,v,i,w]
-                case  6: insertAt = iBestVert    ; break;
-                case  9: insertAt = iBestVert + 2; break;
-                case 12: insertAt = iBestVert    ; break; // Before V: [u,i,v,w]
-                default:
-                    console.log( "ERROR: ConvexHull CW order compromised: Unhandled edge case: %d !", c );
-                    break;
-            }
+                switch( c )
+                {
+                    case  3: insertAt = iBestVert + 1; break; // Try After V: [u,v,i,w]
+                    case  6: insertAt = iBestVert    ; break;
+                    case  9: insertAt = iBestVert + 2; break;
+                    case 12: insertAt = iBestVert    ; break; // Before V: [u,i,v,w]
+                    default:
+                        console.log( "ERROR: ConvexHull CW order compromised: Unhandled edge case: %d !", c );
+                        break;
+                }
 
-            if( insertAt !== undefined )
-            {
-                convexIndex.splice( insertAt, 0, i );
-                convexVerts.splice( insertAt, 0, p );
-            }
-            len = convexIndex.length;
+                if( insertAt !== undefined )
+                {
+                    convexIndex.splice( insertAt, 0, i );
+                    convexVerts.splice( insertAt, 0, p );
+                }
+                len = convexIndex.length;
 
-            // Prune phase
-            // Whenever we expand the convex hull we may have 1+ convex hull vertices
-            // that are now inside the convex hull
+                // Prune phase
+                // Whenever we expand the convex hull we may have 1+ convex hull vertices
+                // that are now inside the convex hull
+            }
         }
+
+canvas_clear();
+draw_tris  ( gaVertex.length, "#DDD" );
+draw_convex();
 
         unknownIndex &= ~mask;
         mask <<= 1;
