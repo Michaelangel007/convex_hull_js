@@ -621,6 +621,7 @@ D( "Vertices dones: %d,  UnknownVertsLeft:", i, unknownIndex.toString(16) );
         // Else we need to add it to the convex hull
         p        = gaVertex[ i ];
         isInside = IsPointInPoly( p, convexVerts );
+        insertAt = undefined;
 
 D( "Test [#%d/%d] in Convex Hull inside: ", i, n-1, (isInside|0) );
 
