@@ -848,7 +848,7 @@ function find_convex()
         return;
     }
 
-if(0)
+if(0) // Only disable for testing
 {
     find_minmax();
     hint_convex();
@@ -867,6 +867,10 @@ if(0)
     convexVerts.push( gaVertex[ convexIndex[ 0 ] ] );
     convexVerts.push( gaVertex[ convexIndex[ 1 ] ] );
     convexVerts.push( gaVertex[ convexIndex[ 2 ] ] );
+
+    // Skip testing first 3 vertices if they are inside the convex hull
+    // since they ARE the convex hull
+    unknownIndex = ~(4|2|1);
 }
 
     cull_convex();
