@@ -20,6 +20,73 @@ https://github.com/Michaelangel007/convex_hull_js
 
     var canvas, context, cw, ch;
 
+    var gaVert4    =
+    [
+        { x: 100, y: 100 }, //1, 1, // A
+        { x: 400, y: 200 }, //4, 2, // B
+        { x: 100, y: 400 }, //1, 5, // C
+        { x: 200, y: 200 }  //2, 2  // D
+    ];
+    var FIELD_VERT = 0; // Absolute vertex order
+    var FIELD_FLIP = 1; // If winding order needs to be flipped
+    var FIELD_LINE = 2;
+    var FIELD_INS  = 3; // Where last vertex needs to be inserted into convex hull order
+    var FIELD_PART = 4; // Partial convex hull expanded
+    var FIELD_HULL = 5; // Pruned  convex hull -- removed unnecessary convex hull vertices
+    //                 Vert   CCW Line  Expand  Prune
+    var gaTest4_00 = [ "ABCD", 0, "CA", 3, "ABCD", "ABC" ]; // # 0 ABCD:  9 <- -> 18
+    var gaTest4_01 = [ "ABDC", 0, "DA", 3, "ABC ", "   " ]; // # 1 ABDC: 11 <- -> 12
+    var gaTest4_02 = [ "ACBD", 1, "AB", 1, "ABC ", "   " ]; // # 2 ACBD: 15 <- -> 19
+    var gaTest4_03 = [ "ACDB", 1, "AD", 1, "    ", "   " ]; // # 3 ACDB: 17 <- ->  6
+    var gaTest4_04 = [ "ADBC", 1, "  ", 3, "    ", "   " ]; // # 4 ADBC: 21 <- -> 13
+    var gaTest4_05 = [ "ADCB", 0, "  ", 1, "    ", "   " ]; // # 5 ADCB: 23 <- ->  7
+    var gaTest4_06 = [ "BACD", 1, "  ",  , "    ", "   " ]; // # 6 BACD:  3 <- -> 20
+    var gaTest4_07 = [ "BADC",  , "  ",  , "    ", "   " ]; // # 7 BADC:  5 <- -> 14
+    var gaTest4_08 = [ "BCAD",  , "  ",  , "    ", "   " ]; // # 8 BCAD: 13 <- -> 21
+    var gaTest4_09 = [ "BCDA",  , "  ",  , "    ", "   " ]; // # 9 BCDA: 16 <- ->  0
+    var gaTest4_10 = [ "BDAC",  , "  ",  , "    ", "   " ]; // #10 BDAC: 19 <- -> 15
+    var gaTest4_11 = [ "BDCA",  , "  ",  , "    ", "   " ]; // #11 BDCA: 22 <- ->  1
+    var gaTest4_12 = [ "CACD",  , "  ",  , "    ", "   " ]; // #12 CABD:  1 <- -> 22
+    var gaTest4_13 = [ "CACD",  , "  ",  , "    ", "   " ]; // #13 CADB:  4 <- ->  8
+    var gaTest4_14 = [ "CBCD",  , "  ",  , "    ", "   " ]; // #14 CBAD:  7 <- -> 23
+    var gaTest4_15 = [ "CBCD",  , "  ",  , "    ", "   " ]; // #15 CBDA: 10 <- ->  2
+    var gaTest4_16 = [ "CDCD",  , "  ",  , "    ", "   " ]; // #16 CDAB: 18 <- ->  9
+    var gaTest4_17 = [ "CDCD",  , "  ",  , "    ", "   " ]; // #17 CDBA: 20 <- ->  3
+    var gaTest4_18 = [ "ABCD",  , "  ",  , "    ", "   " ]; // #18 DABC:  0 <- -> 16
+    var gaTest4_19 = [ "ABCD",  , "  ",  , "    ", "   " ]; // #19 DACB:  2 <- -> 10
+    var gaTest4_20 = [ "ABCD",  , "  ",  , "    ", "   " ]; // #20 DBAC:  6 <- -> 17
+    var gaTest4_21 = [ "ABCD",  , "  ",  , "    ", "   " ]; // #21 DBCA:  8 <- ->  4
+    var gaTest4_22 = [ "ABCD",  , "  ",  , "    ", "   " ]; // #22 DCAB: 12 <- -> 11
+    var gaTest4_23 = [ "ABCD",  , "  ",  , "    ", "   " ]; // #23 DCBA: 14 <- ->  5
+    var gaTests4   =
+    [
+        gaTest4_00,
+        gaTest4_01,
+        gaTest4_02,
+        gaTest4_03,
+        gaTest4_04,
+        gaTest4_05,
+        gaTest4_06,
+        gaTest4_07,
+        gaTest4_08,
+        gaTest4_09,
+        gaTest4_10,
+        gaTest4_11,
+        gaTest4_12,
+        gaTest4_13,
+        gaTest4_14,
+        gaTest4_15,
+        gaTest4_16,
+        gaTest4_17,
+        gaTest4_18,
+        gaTest4_19,
+        gaTest4_20,
+        gaTest4_21,
+        gaTest4_22,
+        gaTest4_23
+    ];
+    var giTest4 = 0; // ABCD
+
     var gaPointsXY = // Raw x,y points NOTE: Origin top-left !
     [
         201, 129,
@@ -60,6 +127,7 @@ https://github.com/Michaelangel007/convex_hull_js
     var giState     = STATE_INIT;
     var giStep      = 0; // Sub-State
 
+    var gbVertLabels = true;
     var gaStatusText =
     [
          "Press NEXT to begin ..."          // STATE_INIT
@@ -291,6 +359,30 @@ https://github.com/Michaelangel007/convex_hull_js
         }
     }
 
+
+    // ======================================================================
+    function draw_labels()
+    {
+        if( !gbVertLabels )
+            return;
+
+        var nFontSize     = 12;
+        context.font      = nFontSize + "px verdana, sans-serif";
+        context.textAlign = "start";
+        context.fillStyle = "#00ff00";
+
+        var i, p, n = gaVertex.length, dy;
+        for( i = 0; i < n ; i++ )
+        {
+            p  = gaVertex[ i ];
+            dy = (p.y < (canvas.height/2)) ? -nFontSize : +nFontSize;
+            if (dy < 0)
+                context.textBaseline = "bottom";
+            else
+                context.textBaseline = "top";
+            context.fillText( "" + p.x + "," + p.y + "", p.x, p.y + dy );
+        }
+    }
 
     // ======================================================================
     function draw_vertex( i, color )
@@ -753,8 +845,27 @@ function find_convex()
         return;
     }
 
+if(0)
+{
     find_minmax();
     hint_convex();
+} else
+{
+    var isCW = IsWindingClockwise2(
+        gaVertex[ 0 ],
+        gaVertex[ 1 ],
+        gaVertex[ 2 ]
+    );
+    if( isCW )
+        convexIndex = [ 0, 1, 2 ];
+    else
+        convexIndex = [ 0, 2, 1 ];
+
+    convexVerts.push( gaVertex[ convexIndex[ 0 ] ] );
+    convexVerts.push( gaVertex[ convexIndex[ 1 ] ] );
+    convexVerts.push( gaVertex[ convexIndex[ 2 ] ] );
+}
+
     cull_convex();
 
     var len  = convexIndex.length
@@ -834,11 +945,11 @@ D( "     Convex Hull: Vertex Code: %d", c );
         }
 
 // DEBUG
-//canvas_clear();
-//draw_tris  ( gaVertex.length, "#DDD" );
-//draw_convex();
-//if( (i+1) < n )
-//draw_vertex( i+1 );
+canvas_clear();
+draw_tris  ( gaVertex.length, "#DDD" );
+draw_convex();
+if( (i+1) < n )
+draw_vertex( i+1 );
 //DEBUG
 
         unknownIndex &= ~mask;
@@ -866,6 +977,7 @@ function init()
     canvas_clear();
     ui_button_step_alpha( "0.0" );
     ui_text_set_label();
+    draw_labels();
 }
 
 
@@ -883,6 +995,7 @@ D( "State: %d", giState );
     {
         case STATE_POINT:
             draw_points();
+            draw_labels();
             ui_button_step_alpha( "1.0" );
             break;
 
@@ -891,11 +1004,13 @@ D( "State: %d", giState );
             canvas_clear();
             draw_tris  ();
             draw_points();
-            break;
+            draw_labels();
+           break;
 
         case STATE_BOX  :
             draw_tris  ();
             draw_points();
+            draw_labels();
             find_minmax();
             hint_convex();
             draw_minmax();
@@ -1060,22 +1175,39 @@ function main()
 
     ui_button_step_alpha( "0.0" );
 
+    gaVertex = [];
+
     // Convert interweaved raw points into nice point .x .y object
-    var n = gaPointsXY.length;
-D( "Convert PointXY -> Vertex[]: %d", n );
-    for( var i = 0; i < n; i += 2 )
+if(1)
     {
-        var p = { x: gaPointsXY[i+0], y: gaPointsXY[i+1] }; // Optimized/Inlined: vec2_make();
-        gaVertex[ i/2 ] = p;
+        var n = gaPointsXY.length;
+D( "Convert PointXY -> Vertex[]: %d", n );
+        for( var i = 0; i < n; i += 2 )
+        {
+            var p = { x: gaPointsXY[i+0], y: gaPointsXY[i+1] }; // Optimized/Inlined: vec2_make();
+            gaVertex[ i/2 ] = p;
+        }
+        var isCW = IsTriWindingClockwise2( 2, 3, 6 );
+        console.log( "[ 2, 3, 6 ].winding CW: " + (isCW|0) );
+    }
+    else
+    {
+        var vert$ = gaTests4[ giTest4 ][ FIELD_VERT ];
+        var n = vert$.length;
+    //console.log( vert$ );
+    //console.log( n );
+        for( var i = 0; i < n ; i++ )
+        {
+            var c = vert$.substring( i, i+1 );
+            var j = vert$.charCodeAt(i);
+            var p = gaVert4[ j - 65 ];
+            gaVertex.push( p );
+    //console.log( "  [%d]: %s -> %d: < %d, %d >", i, c, j, p.x, p.y );
+        }
     }
 
 D( "Initalize ..." );
     init();
-
-
-    var isCW = IsTriWindingClockwise2( 2, 3, 6 );
-    console.log( "[ 2, 3, 6 ].winding CW: " + (isCW|0) );
-
 
 //    init_convex();
 //    draw_tris  ();
