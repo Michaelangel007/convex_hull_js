@@ -369,9 +369,8 @@ https://github.com/Michaelangel007/convex_hull_js
         var nFontSize     = 12;
         context.font      = nFontSize + "px verdana, sans-serif";
         context.textAlign = "start";
-        context.fillStyle = "#00ff00";
 
-        var i, p, n = gaVertex.length, dy;
+        var i, p, n = gaVertex.length, dy, t;
         for( i = 0; i < n ; i++ )
         {
             p  = gaVertex[ i ];
@@ -380,7 +379,11 @@ https://github.com/Michaelangel007/convex_hull_js
                 context.textBaseline = "bottom";
             else
                 context.textBaseline = "top";
-            context.fillText( "" + p.x + "," + p.y + "", p.x, p.y + dy );
+
+            t = "" + p.x + "," + p.y + "";
+
+            context.fillStyle = "#000"; context.fillText( t, p.x+1, p.y+1 + dy ); // Drop shadow
+            context.fillStyle = "#0f0"; context.fillText( t, p.x  , p.y   + dy );
         }
     }
 
