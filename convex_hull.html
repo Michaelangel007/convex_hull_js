@@ -130,6 +130,8 @@ https://github.com/Michaelangel007/convex_hull_js
     var giState     = STATE_INIT;
     var giStep      = 0; // Sub-State
 
+    var gbInitConvexHullMinBB = true;
+
     var gbVertLabels = true;
     var gaStatusText =
     [
@@ -852,8 +854,8 @@ function find_convex()
         convexVerts = [ gaVertex[0], gaVertex[1], gaVertex[2] ];
         return;
     }
-gaVert4
-if(0) // Only disable for testing
+
+if( gbInitConvexHullMinBB )
 {
     find_minmax();
     hint_convex();
@@ -1109,6 +1111,15 @@ D( "Hull: %d/%d", giStep, n-1 );
 }
 
 
+function OnClickUseMinMaxBB()
+{
+    gbInitConvexHullMinBB = !gbInitConvexHullMinBB;
+
+	var OffOn = [ "no", "Yes" ];
+    var label = document.getElementById( "labelUseMinMaxBB" );
+    label.innerHTML = OffOn[ gbInitConvexHullMinBB|0 ];
+}
+
 // ======================================================================
 function OnClickDebugPrevVert()
 {
@@ -1239,10 +1250,13 @@ D( "Initalize ..." );
 <body onload="main()">
     <button id="buttonNext" onclick="OnClickNext( )">Next (stage) </button>
     <button id="buttonStep" onclick="OnClickStep(1)">(single) Step</button>
-    <span id="pointsText"></span>
-<button id="debugPrevVert" onclick="OnClickDebugPrevVert()">Highlight Prev Vert </button>
-<button id="debugNextVert" onclick="OnClickDebugNextVert()">Highlight Next Vert </button>
-<span   id="debugThisVert"></span>
+    <span   id="pointsText"></span>
+    <button id="debugPrevVert" onclick="OnClickDebugPrevVert()">Highlight Prev Vert </button>
+    <button id="debugNextVert" onclick="OnClickDebugNextVert()">Highlight Next Vert </button>
+    <span   id="debugThisVert"></span>
+    <button id="buttonUseMinMaxBB" onclick="OnClickUseMinMaxBB()">Initial convex hull from min/max bounding box</button>
+    <span   id="labelUseMinMaxBB">Yes</span>
+
    <p>
     <canvas id="canvas" width="1152" height="648" style="border:1px solid #CCC;">
 </body>
