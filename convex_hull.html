@@ -20,6 +20,7 @@ https://github.com/Michaelangel007/convex_hull_js
 
     var canvas, context, cw, ch;
 
+    var giTest4 = undefined; // NOTE: Set this to which Test4 you want to verify
     var gaVert4 = // Scaled up by 100x
     [
         { x: 100, y: 100 }, // 1, 1, // A
@@ -88,7 +89,6 @@ https://github.com/Michaelangel007/convex_hull_js
         gaTest4_22,
         gaTest4_23
     ];
-    var giTest4 = 0; // ABCD
 
     var gaPointsXY = // Raw x,y points NOTE: Origin top-left !
     [
@@ -822,7 +822,7 @@ D( "ConvexHull: Cull? point [#%d/%d] inside: ", i, n-1, (isInside | 0) );
 
             if( isInside )
                 unknownIndex &= ~mask;
-        }
+        }http://stackoverflow.com/questions/32056324/git-pull-there-is-no-tracking-information-for-the-current-branch
         mask <<= 1;
     }
 
@@ -1190,7 +1190,7 @@ function main()
     gaVertex = [];
 
     // Convert interweaved raw points into nice point .x .y object
-if(0)
+    if( giTest4 === undefined )
     {
         var n = gaPointsXY.length;
 D( "Convert PointXY -> Vertex[]: %d", n );
