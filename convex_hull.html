@@ -1000,6 +1000,48 @@ function init()
 
 
 // ======================================================================
+function OnClickDebugPrevVert()
+{
+    if( giState == STATE_HULL )
+        OnClickStep( false );
+
+    var n = gaVertex.length - 1;
+
+    --giDebugVert;
+    if( giDebugVert < 0)
+        giDebugVert = gaVertex.length - 1;
+
+    var p = gaVertex[ giDebugVert ];
+    draw_point( p.x, p.y, "#F80", 9 );
+
+    var label           = document.getElementById( "debugThisVert" );
+    label.style.opacity = "1.0";
+    label.innerHTML     = "[ " + giDebugVert + " ].xy: " + p.x + "," + p.y;
+}
+
+
+// ======================================================================
+function OnClickDebugNextVert()
+{
+    if( giState == STATE_HULL )
+        OnClickStep( false );
+
+    var n = gaVertex.length - 1;
+
+    ++giDebugVert;
+    if( giDebugVert > n)
+        giDebugVert = 0;
+
+    var p = gaVertex[ giDebugVert ];
+    draw_point( p.x, p.y, "#F80", 9 );
+
+    var label           = document.getElementById( "debugThisVert" );
+    label.style.opacity = "1.0";
+    label.innerHTML     = "[ " + giDebugVert + " ].xy: " + p.x + "," + p.y;
+}
+
+
+// ======================================================================
 function OnClickNext()
 {
     ++giState;
@@ -1119,48 +1161,6 @@ function OnClickUseMinMaxBB()
 	var OffOn = [ "no", "Yes" ];
     var label = document.getElementById( "labelUseMinMaxBB" );
     label.innerHTML = OffOn[ gbInitConvexHullMinBB|0 ];
-}
-
-
-// ======================================================================
-function OnClickDebugPrevVert()
-{
-    if( giState == STATE_HULL )
-        OnClickStep( false );
-
-    var n = gaVertex.length - 1;
-
-    --giDebugVert;
-    if( giDebugVert < 0)
-        giDebugVert = gaVertex.length - 1;
-
-    var p = gaVertex[ giDebugVert ];
-    draw_point( p.x, p.y, "#F80", 9 );
-
-    var label           = document.getElementById( "debugThisVert" );
-    label.style.opacity = "1.0";
-    label.innerHTML     = "[ " + giDebugVert + " ].xy: " + p.x + "," + p.y;
-}
-
-
-// ======================================================================
-function OnClickDebugNextVert()
-{
-    if( giState == STATE_HULL )
-        OnClickStep( false );
-
-    var n = gaVertex.length - 1;
-
-    ++giDebugVert;
-    if( giDebugVert > n)
-        giDebugVert = 0;
-
-    var p = gaVertex[ giDebugVert ];
-    draw_point( p.x, p.y, "#F80", 9 );
-
-    var label           = document.getElementById( "debugThisVert" );
-    label.style.opacity = "1.0";
-    label.innerHTML     = "[ " + giDebugVert + " ].xy: " + p.x + "," + p.y;
 }
 
 
