@@ -1018,7 +1018,7 @@ function OnClickDebugPrevVert()
     var p = gaVertex[ giDebugVert ];
     draw_point( p.x, p.y, "#F80", 9 );
 
-    var label           = document.getElementById( "debugThisVert" );
+    var label           = document.getElementById( "labelWhichVert" );
     label.style.opacity = "1.0";
     label.innerHTML     = "[ " + giDebugVert + " ].xy: " + p.x + "," + p.y;
 }
@@ -1039,7 +1039,7 @@ function OnClickDebugNextVert()
     var p = gaVertex[ giDebugVert ];
     draw_point( p.x, p.y, "#F80", 9 );
 
-    var label           = document.getElementById( "debugThisVert" );
+    var label           = document.getElementById( "labelWhichVert" );
     label.style.opacity = "1.0";
     label.innerHTML     = "[ " + giDebugVert + " ].xy: " + p.x + "," + p.y;
 }
@@ -1182,10 +1182,10 @@ function OnClickUseMinMaxBB()
 // ======================================================================
 function ui_button_step_alpha( alpha )
 {
-    var bs           = document.getElementById("buttonStep" );
+    var bs           = document.getElementById( "buttonStep" );
     bs.style.opacity = alpha;
 
-    var p           = document.getElementById("pointsText" );
+    var p           = document.getElementById( "labelPoints" );
     p.style.opacity = alpha
 }
 
@@ -1201,7 +1201,7 @@ function ui_text_set_label()
     if( giState == STATE_HULL )
         text += giStep + " / " + (gaVertex.length - 1);
 
-    var p           = document.getElementById("pointsText" );
+    var p           = document.getElementById( "labelPoints" );
     p.innerHTML     = text;
     p.style.opacity = "1.0"
 }
@@ -1273,12 +1273,12 @@ D( "Initalize ..." );
         <button id="buttonStep" onclick="OnClickStep(1)">(single) Step</button>
     </td>
     <td width="25%">
-        <span   id="pointsText"></span>
+        <span   id="labelPoints"></span>
     </td>
     <td>
-        <button id="debugPrevVert" onclick="OnClickDebugPrevVert()">Highlight Prev Vert </button>
-        <button id="debugNextVert" onclick="OnClickDebugNextVert()">Highlight Next Vert </button>
-        <span   id="debugThisVert"></span>
+        <button id="buttonPrevVert" onclick="OnClickDebugPrevVert()">Highlight Prev Vert </button>
+        <button id="buttonNextVert" onclick="OnClickDebugNextVert()">Highlight Next Vert </button>
+        <span   id="labelWhichVert"></span>
     </td>
     <td>
         <button id="buttonUseMinMaxBB" onclick="OnClickUseMinMaxBB()">Initial convex hull from min/max bounding box</button>
