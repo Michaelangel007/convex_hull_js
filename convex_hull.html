@@ -698,7 +698,7 @@ D( "Pre Convex Hull Indices: " + convexIndex );
 }
 
 
-// Enlarge the convex hull if necessary
+// Print which vertices are in the convex hull
 // ======================================================================
 function dump_convex()
 {
@@ -792,6 +792,8 @@ D( "     Convex Hull Vertex Code: %d", c );
             // That is, use a new temp set of points with
             // - vertex (B)efore removed and test if B is inside the new polygon
             // - vertex (A)fter  removed and test if A is inside the new polygon
+            //
+            // We check if the angle is >= 180 -- we no longer have a convex polygon but a concave one
             if( insertAt !== undefined )
             {
                 convexIndex.splice( insertAt, 0, i );
