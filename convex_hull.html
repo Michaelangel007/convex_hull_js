@@ -842,8 +842,6 @@ function find_convex()
     var n = gaVertex.length;
     var h, i, j, k;
 
-    init_convex();
-
     if( n < 3 )
         return; // no solution
     else
@@ -855,31 +853,12 @@ function find_convex()
         return;
     }
 
-if( gbInitConvexHullMinBB )
-{
-    find_minmax();
-    hint_convex();
-} else
-{
-    var isCW = IsWindingClockwise2(
-        gaVertex[ 0 ],
-        gaVertex[ 1 ],
-        gaVertex[ 2 ]
-    );
-    if( isCW )
-        convexIndex = [ 0, 1, 2 ];
-    else
-        convexIndex = [ 0, 2, 1 ];
-
-    convexVerts.push( gaVertex[ convexIndex[ 0 ] ] );
-    convexVerts.push( gaVertex[ convexIndex[ 1 ] ] );
-    convexVerts.push( gaVertex[ convexIndex[ 2 ] ] );
-
-    // Skip testing first 3 vertices if they are inside the convex hull
-    // since they ARE the convex hull
-
-    unknownIndex = ~(4|2|1);
-}
+    if( gbInitConvexHullMinBB )
+    {
+        find_minmax();
+        hint_convex();
+    } else
+        vert_convex();
 
     cull_convex();
 
@@ -996,6 +975,31 @@ function init()
 }
 
 
+// Initialize convex hull with first 3 vertices
+// ======================================================================
+function vert_convex()
+{
+    var isCW = IsWindingClockwise2(
+        gaVertex[ 0 ],
+        gaVertex[ 1 ],
+        gaVertex[ 2 ]
+    );
+    if( isCW )
+        convexIndex = [ 0, 1, 2 ];
+    else
+        convexIndex = [ 0, 2, 1 ];
+
+    convexVerts.push( gaVertex[ convexIndex[ 0 ] ] );
+    convexVerts.push( gaVertex[ convexIndex[ 1 ] ] );
+    convexVerts.push( gaVertex[ convexIndex[ 2 ] ] );
+
+    // Skip testing first 3 vertices if they are inside the convex hull
+    // since they ARE the convex hull
+
+    unknownIndex = ~(4|2|1);
+}
+
+
 // __ UI __
 
 
@@ -1069,6 +1073,7 @@ D( "State: %d", giState );
             draw_points();
             draw_labels();
             find_minmax();
+            init_convex();
             hint_convex();
             draw_minmax();
             break;
@@ -1076,6 +1081,13 @@ D( "State: %d", giState );
         case STATE_HULL :
             giStep = 0; // assume we have zero vertices processed/added to convex hull
             ui_button_step_alpha( "1.0" );
+
+            if( !gbInitConvexHullMinBB )
+            {
+                init_convex();
+                vert_convex();
+            }
+
             OnClickStep( false );
             break;
 
@@ -1083,6 +1095,7 @@ D( "State: %d", giState );
             canvas_clear();
             ui_button_step_alpha( "0.0" );
             draw_tris  ( gaVertex.length, "#DDD" );
+            init_convex();
             find_convex();
 //          test_convex(); // verify we passed
             draw_convex();
@@ -1238,10 +1251,10 @@ D( "Convert PointXY -> Vertex[]: %d", n );
 D( "Initalize ..." );
     init();
 
-//    init_convex();
 //    draw_tris  ();
 //    draw_points();
 //    find_minmax();
+//    init_convex();
 //    hint_convex();
 //    draw_minmax();
 //    find_convex();
