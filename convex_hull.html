@@ -633,7 +633,7 @@ D( "Initial Convex Hull Indices: " + convexIndex );
     // First we default to classify all vertices as unknown.
     // Next we remove vertex indices where we know their status (inside/outside)
     //
-    // Optimization: There is no point in keeping a dynamic array.
+    // Optimization: There is no point in keeping a dynamic array of integers.
     // Since we are doing set manipulation we can simply use a 32-bit int bitfield.
     //
     // While Javascript has tons of problems there are two specific problems that concern us:
