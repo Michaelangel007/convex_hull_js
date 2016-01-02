@@ -1173,7 +1173,7 @@ function OnClickUseMinMaxBB()
 {
     gbInitConvexHullMinBB = !gbInitConvexHullMinBB;
 
-	var OffOn = [ "no", "Yes" ];
+    var OffOn = [ "no", "Yes" ];
     var label = document.getElementById( "labelUseMinMaxBB" );
     label.innerHTML = OffOn[ gbInitConvexHullMinBB|0 ];
 }
@@ -1267,24 +1267,24 @@ D( "Initalize ..." );
     </head>
 <body onload="main()">
 <table border="1" width="1152">
-	<tr>
-	<td>
-		<button id="buttonNext" onclick="OnClickNext( )">Next (stage) </button>
-		<button id="buttonStep" onclick="OnClickStep(1)">(single) Step</button>
-	</td>
-	<td width="25%">
-		<span   id="pointsText"></span>
-	</td>
-	<td>
-		<button id="debugPrevVert" onclick="OnClickDebugPrevVert()">Highlight Prev Vert </button>
-		<button id="debugNextVert" onclick="OnClickDebugNextVert()">Highlight Next Vert </button>
-		<span   id="debugThisVert"></span>
-	</td>
-	<td>
-		<button id="buttonUseMinMaxBB" onclick="OnClickUseMinMaxBB()">Initial convex hull from min/max bounding box</button>
-		<span   id="labelUseMinMaxBB">Yes</span>
-	</td>
-	</tr>
+    <tr>
+    <td>
+        <button id="buttonNext" onclick="OnClickNext( )">Next (stage) </button>
+        <button id="buttonStep" onclick="OnClickStep(1)">(single) Step</button>
+    </td>
+    <td width="25%">
+        <span   id="pointsText"></span>
+    </td>
+    <td>
+        <button id="debugPrevVert" onclick="OnClickDebugPrevVert()">Highlight Prev Vert </button>
+        <button id="debugNextVert" onclick="OnClickDebugNextVert()">Highlight Next Vert </button>
+        <span   id="debugThisVert"></span>
+    </td>
+    <td>
+        <button id="buttonUseMinMaxBB" onclick="OnClickUseMinMaxBB()">Initial convex hull from min/max bounding box</button>
+        <span   id="labelUseMinMaxBB">Yes</span>
+    </td>
+    </tr>
 </table>
     <p>
     <canvas id="canvas" width="1152" height="648" style="border:1px solid #CCC;">
