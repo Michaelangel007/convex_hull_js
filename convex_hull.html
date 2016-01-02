@@ -1111,6 +1111,7 @@ D( "Hull: %d/%d", giStep, n-1 );
 }
 
 
+// ======================================================================
 function OnClickUseMinMaxBB()
 {
     gbInitConvexHullMinBB = !gbInitConvexHullMinBB;
@@ -1119,6 +1120,7 @@ function OnClickUseMinMaxBB()
     var label = document.getElementById( "labelUseMinMaxBB" );
     label.innerHTML = OffOn[ gbInitConvexHullMinBB|0 ];
 }
+
 
 // ======================================================================
 function OnClickDebugPrevVert()
