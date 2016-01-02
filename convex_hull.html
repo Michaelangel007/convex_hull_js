@@ -1074,7 +1074,7 @@ D( "State: %d", giState );
             draw_labels();
             find_minmax();
             init_convex();
-            hint_convex();
+            hint_convex(); // use bounding box to initialize convex hull
             draw_minmax();
             break;
 
@@ -1082,6 +1082,8 @@ D( "State: %d", giState );
             giStep = 0; // assume we have zero vertices processed/added to convex hull
             ui_button_step_alpha( "1.0" );
 
+            // If we are not initializing the convex hull with the min/max bounding box
+            // we need to initialize it with the first 3 vertices instead
             if( !gbInitConvexHullMinBB )
             {
                 init_convex();
@@ -1256,6 +1258,7 @@ D( "Initalize ..." );
 //    find_minmax();
 //    init_convex();
 //    hint_convex();
+//OR: vert_convex();
 //    draw_minmax();
 //    find_convex();
 //    draw_convex();
